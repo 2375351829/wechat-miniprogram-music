@@ -1,0 +1,63 @@
+<view class="page-container">
+  <view class="type-section">
+    <text class="section-title">选择祝福类型</text>
+    <scroll-view class="type-scroll" scroll-x>
+      <view class="type-item {{currentType === item.index ? 'active' : ''}}" 
+            wx:for="{{blessingTypes}}" wx:key="index" 
+            bindtap="selectType" data-type="{{item.index}}">
+        <text>{{item.name}}</text>
+      </view>
+    </scroll-view>
+  </view>
+  
+  <view class="form-section">
+    <view class="form-group">
+      <text class="form-label">接收者 *</text>
+      <input class="form-input" placeholder="请输入接收者（班级或个人）" value="{{receiver}}" bindinput="onReceiverInput" />
+    </view>
+    
+    <view class="form-group">
+      <text class="form-label">祝福内容 *</text>
+      <textarea class="form-textarea" placeholder="请输入祝福内容（最多200字）" maxlength="200" value="{{content}}" bindinput="onContentInput"></textarea>
+      <text class="char-count">{{content.length}}/200</text>
+    </view>
+    
+    <view class="form-group">
+      <view class="checkbox-row" bindtap="toggleAnonymous">
+        <view class="checkbox {{isAnonymous ? 'checked' : ''}}">
+          <text wx:if="{{isAnonymous}}">✓</text>
+        </view>
+        <text>匿名发送</text>
+      </view>
+    </view>
+  </view>
+  
+  <button class="btn-submit" bindtap="submitBlessing">提交祝福</button>
+  
+  <view class="list-section">
+    <view class="section-header">
+      <text class="section-title">最新祝福</text>
+    </view>
+    
+    <view class="blessing-list" wx:if="{{blessingList.length > 0}}">
+      <view class="blessing-item" wx:for="{{blessingList}}" wx:key="id">
+        <view class="blessing-header">
+          <text class="blessing-type">{{item.type_name}}</text>
+          <text class="blessing-time">{{item.create_time}}</text>
+        </view>
+        <view class="blessing-content">
+          <text>{{item.content}}</text>
+        </view>
+        <view class="blessing-footer">
+          <text class="blessing-receiver">送给: {{item.receiver}}</text>
+          <text class="blessing-author">—— {{item.nickname}}</text>
+        </view>
+      </view>
+    </view>
+    
+    <view class="empty-state" wx:else>
+      <image src="/images/empty.png" mode="aspectFit"></image>
+      <text>暂无祝福</text>
+    </view>
+  </view>
+</view>

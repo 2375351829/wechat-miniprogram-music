@@ -1,0 +1,464 @@
+<div class="content">
+  <div class="page-header">
+    <div>
+      <h2>数据概览</h2>
+      <p style="color: var(--text-color-secondary); margin-top: 4px; font-size: 14px;">
+        欢迎回来，<span id="adminName">管理员</span>
+      </p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-secondary" onclick="location.reload()">
+        <span>🔄</span> 刷新数据
+      </button>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon" style="background: linear-gradient(135deg, #1890ff 0%, #69c0ff 100%);">🎵</div>
+      <div class="stat-content">
+        <div class="value" id="totalSongs">-</div>
+        <div class="label">歌曲总数</div>
+      </div>
+    </div>
+    
+    <div class="stat-card">
+      <div class="stat-icon" style="background: linear-gradient(135deg, #52c41a 0%, #95de64 100%);">📋</div>
+      <div class="stat-content">
+        <div class="value" id="pendingRequests">-</div>
+        <div class="label">待审核点歌</div>
+      </div>
+    </div>
+    
+    <div class="stat-card">
+      <div class="stat-icon" style="background: linear-gradient(135deg, #faad14 0%, #ffc53d 100%);">💌</div>
+      <div class="stat-content">
+        <div class="value" id="pendingBlessings">-</div>
+        <div class="label">待审核祝福</div>
+      </div>
+    </div>
+    
+    <div class="stat-card">
+      <div class="stat-icon" style="background: linear-gradient(135deg, #722ed1 0%, #b37feb 100%);">▶️</div>
+      <div class="stat-content">
+        <div class="value" id="todayPlayed">-</div>
+        <div class="label">今日播放</div>
+      </div>
+    </div>
+    
+    <div class="stat-card">
+      <div class="stat-icon" style="background: linear-gradient(135deg, #eb2f96 0%, #ff85c0 100%);">👥</div>
+      <div class="stat-content">
+        <div class="value" id="totalUsers">-</div>
+        <div class="label">用户总数</div>
+      </div>
+    </div>
+    
+    <div class="stat-card">
+      <div class="stat-icon" style="background: linear-gradient(135deg, #13c2c2 0%, #5cdbd3 100%);">📝</div>
+      <div class="stat-content">
+        <div class="value" id="todayRequests">-</div>
+        <div class="label">今日点歌</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top: 24px;">
+    <div class="card-header">
+      <h3 class="card-title">快捷操作</h3>
+    </div>
+    <div class="card-body">
+      <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+        <a href="#songs" class="btn btn-primary">
+          <span>➕</span> 添加歌曲
+        </a>
+        <a href="#audit" class="btn btn-secondary">
+          <span>✅</span> 审核管理
+        </a>
+        <a href="#play" class="btn btn-secondary">
+          <span>▶️</span> 播放控制
+        </a>
+        <a href="#homepage" class="btn btn-secondary">
+          <span>🏠</span> 首页配置
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px; margin-top: 24px;">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">最近点歌</h3>
+        <a href="#audit" class="btn btn-sm btn-secondary">查看全部</a>
+      </div>
+      <div class="card-body" style="padding: 0;">
+        <div id="recentRequests">
+          <div style="text-align: center; padding: 40px; color: var(--text-color-secondary);">
+            <div class="loading-spinner"></div>
+            <p style="margin-top: 12px;">加载中...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">热门歌曲</h3>
+        <a href="#songs" class="btn btn-sm btn-secondary">查看全部</a>
+      </div>
+      <div class="card-body" style="padding: 0;">
+        <div id="hotSongs">
+          <div style="text-align: center; padding: 40px; color: var(--text-color-secondary);">
+            <div class="loading-spinner"></div>
+            <p style="margin-top: 12px;">加载中...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 24px;
+}
+
+.stat-card::before {
+  display: none;
+}
+
+.stat-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-content .value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-color);
+  line-height: 1.2;
+}
+
+.stat-content .label {
+  font-size: 14px;
+  color: var(--text-color-secondary);
+  margin-top: 4px;
+}
+
+.recent-item {
+  display: flex;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border-color-split);
+  transition: background var(--transition-fast);
+}
+
+.recent-item:last-child {
+  border-bottom: none;
+}
+
+.recent-item:hover {
+  background: var(--bg-color-component-hover);
+}
+
+.recent-item .song-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.recent-item .song-name {
+  font-weight: 500;
+  color: var(--text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recent-item .song-artist {
+  font-size: 12px;
+  color: var(--text-color-secondary);
+  margin-top: 2px;
+}
+
+.recent-item .user-name {
+  font-size: 13px;
+  color: var(--text-color-secondary);
+  margin-left: 12px;
+}
+
+.recent-item .time {
+  font-size: 12px;
+  color: var(--text-color-disabled);
+  margin-left: 12px;
+}
+
+.hot-item {
+  display: flex;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border-color-split);
+  transition: background var(--transition-fast);
+}
+
+.hot-item:last-child {
+  border-bottom: none;
+}
+
+.hot-item:hover {
+  background: var(--bg-color-component-hover);
+}
+
+.hot-item .rank {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  margin-right: 16px;
+  flex-shrink: 0;
+}
+
+.hot-item .rank.top-1 {
+  background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%);
+  color: #fff;
+}
+
+.hot-item .rank.top-2 {
+  background: linear-gradient(135deg, #faad14 0%, #ffc53d 100%);
+  color: #fff;
+}
+
+.hot-item .rank.top-3 {
+  background: linear-gradient(135deg, #52c41a 0%, #95de64 100%);
+  color: #fff;
+}
+
+.hot-item .rank.normal {
+  background: #f5f5f5;
+  color: var(--text-color-secondary);
+}
+
+.hot-item .song-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.hot-item .song-name {
+  font-weight: 500;
+  color: var(--text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hot-item .song-artist {
+  font-size: 12px;
+  color: var(--text-color-secondary);
+  margin-top: 2px;
+}
+
+.hot-item .play-count {
+  font-size: 13px;
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 24px;
+  color: var(--text-color-secondary);
+}
+
+.empty-state .icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .stat-card {
+    padding: 16px;
+  }
+  
+  .stat-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 20px;
+  }
+  
+  .stat-content .value {
+    font-size: 24px;
+  }
+  
+  .recent-item, .hot-item {
+    padding: 12px 16px;
+  }
+}
+</style>
+
+<script>
+window.initDashboardPage = function() {
+  loadAdminInfo();
+  loadDashboardData();
+  loadRecentRequests();
+  loadHotSongs();
+};
+
+function loadAdminInfo() {
+  const adminInfo = JSON.parse(localStorage.getItem('admin_info') || '{}');
+  const adminNameEl = document.getElementById('adminName');
+  if (adminNameEl) {
+    adminNameEl.textContent = adminInfo.real_name || adminInfo.username || '管理员';
+  }
+}
+
+async function loadDashboardData() {
+  try {
+    const res = await api.admin.getDashboard();
+    if (res.code === 0) {
+      const data = res.data || {};
+      animateNumber('totalSongs', data.totalSongs || 0);
+      animateNumber('pendingRequests', data.pendingRequests || 0);
+      animateNumber('pendingBlessings', data.pendingBlessings || 0);
+      animateNumber('todayPlayed', data.todayPlayed || 0);
+      animateNumber('totalUsers', data.totalUsers || 0);
+      animateNumber('todayRequests', data.todayRequests || 0);
+    }
+  } catch (error) {
+    console.error('加载仪表盘数据失败:', error);
+  }
+}
+
+function animateNumber(id, target) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  
+  const duration = 800;
+  const start = 0;
+  const startTime = performance.now();
+  
+  function update(currentTime) {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const easeProgress = 1 - Math.pow(1 - progress, 3);
+    const current = Math.floor(start + (target - start) * easeProgress);
+    el.textContent = current.toLocaleString();
+    
+    if (progress < 1) {
+      requestAnimationFrame(update);
+    }
+  }
+  
+  requestAnimationFrame(update);
+}
+
+async function loadRecentRequests() {
+  try {
+    const res = await api.songRequest.getHistory({ page: 1, pageSize: 5 });
+    const container = document.getElementById('recentRequests');
+    
+    if (res.code === 0 && res.data && res.data.list && res.data.list.length > 0) {
+      container.innerHTML = res.data.list.map(item => `
+        <div class="recent-item">
+          <div class="song-info">
+            <div class="song-name">${item.song_name || '-'}</div>
+            <div class="song-artist">${item.singer || '未知歌手'}</div>
+          </div>
+          <div class="user-name">${item.nickname || '未知'}</div>
+          <div class="time">${formatTime(item.create_time)}</div>
+        </div>
+      `).join('');
+    } else {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="icon">📭</div>
+          <p>暂无点歌记录</p>
+        </div>
+      `;
+    }
+  } catch (error) {
+    console.error('加载最近点歌失败:', error);
+    document.getElementById('recentRequests').innerHTML = `
+      <div class="empty-state">
+        <div class="icon">⚠️</div>
+        <p>加载失败</p>
+      </div>
+    `;
+  }
+}
+
+async function loadHotSongs() {
+  try {
+    const res = await api.song.getHot();
+    const container = document.getElementById('hotSongs');
+    
+    if (res.code === 0 && res.data && res.data.length > 0) {
+      container.innerHTML = res.data.slice(0, 5).map((item, index) => {
+        const rankClass = index < 3 ? `top-${index + 1}` : 'normal';
+        return `
+          <div class="hot-item">
+            <div class="rank ${rankClass}">${index + 1}</div>
+            <div class="song-info">
+              <div class="song-name">${item.name || '-'}</div>
+              <div class="song-artist">${item.singer || '未知歌手'}</div>
+            </div>
+            <div class="play-count">${item.play_count || 0}次</div>
+          </div>
+        `;
+      }).join('');
+    } else {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="icon">🎵</div>
+          <p>暂无热门歌曲</p>
+        </div>
+      `;
+    }
+  } catch (error) {
+    console.error('加载热门歌曲失败:', error);
+    document.getElementById('hotSongs').innerHTML = `
+      <div class="empty-state">
+        <div class="icon">⚠️</div>
+        <p>加载失败</p>
+      </div>
+    `;
+  }
+}
+
+function formatTime(time) {
+  if (!time) return '-';
+  const date = new Date(time);
+  const now = new Date();
+  const diff = now - date;
+  
+  if (diff < 60000) return '刚刚';
+  if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前';
+  if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前';
+  if (diff < 604800000) return Math.floor(diff / 86400000) + '天前';
+  
+  return `${date.getMonth() + 1}/${date.getDate()}`;
+}
+
+window.initDashboardPage();
+</script>

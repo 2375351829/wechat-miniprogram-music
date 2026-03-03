@@ -1,0 +1,1050 @@
+<div class="content">
+  <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+      <h2>首页配置</h2>
+      <p style="color: #666; font-size: 13px; margin-top: 4px;">管理小程序首页内容，配置变更后实时同步</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-secondary" onclick="homepageConfig.togglePreview()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 4px;"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+        预览
+      </button>
+      <button class="btn btn-primary" onclick="homepageConfig.publishConfig()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 4px;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        发布配置
+      </button>
+    </div>
+  </div>
+
+  <div class="config-container">
+    <div class="config-main" id="configMain">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">模块开关配置</h3>
+        </div>
+        <div class="card-body">
+          <div class="module-switches">
+            <label class="switch-item">
+              <span>轮播图模块</span>
+              <input type="checkbox" id="showBanners" onchange="homepageConfig.updateModuleSwitch('show_banners', this.checked)" checked>
+              <span class="switch-slider"></span>
+            </label>
+            <label class="switch-item">
+              <span>公告模块</span>
+              <input type="checkbox" id="showAnnouncements" onchange="homepageConfig.updateModuleSwitch('show_announcements', this.checked)" checked>
+              <span class="switch-slider"></span>
+            </label>
+            <label class="switch-item">
+              <span>热门歌曲模块</span>
+              <input type="checkbox" id="showHotSongs" onchange="homepageConfig.updateModuleSwitch('show_hot_songs', this.checked)" checked>
+              <span class="switch-slider"></span>
+            </label>
+            <label class="switch-item">
+              <span>新歌推荐模块</span>
+              <input type="checkbox" id="showNewSongs" onchange="homepageConfig.updateModuleSwitch('show_new_songs', this.checked)" checked>
+              <span class="switch-slider"></span>
+            </label>
+            <label class="switch-item">
+              <span>推荐歌曲模块</span>
+              <input type="checkbox" id="showRecommendSongs" onchange="homepageConfig.updateModuleSwitch('show_recommend_songs', this.checked)" checked>
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">详细参数配置</h3>
+        </div>
+        <div class="card-body">
+          <div class="config-section">
+            <h4 class="config-section-title">轮播图设置</h4>
+            <div class="config-row">
+              <div class="config-item">
+                <label>显示数量</label>
+                <input type="number" id="bannerCountConfig" min="1" max="10" value="5" onchange="homepageConfig.updateConfigValue('banner_count', this.value)">
+                <span class="config-hint">首页显示的轮播图数量（1-10）</span>
+              </div>
+              <div class="config-item">
+                <label>自动播放</label>
+                <label class="switch-item-small">
+                  <input type="checkbox" id="bannerAutoPlay" onchange="homepageConfig.updateConfigValue('banner_auto_play', this.checked)" checked>
+                  <span class="switch-slider-small"></span>
+                </label>
+                <span class="config-hint">是否自动轮播</span>
+              </div>
+              <div class="config-item">
+                <label>轮播间隔</label>
+                <input type="number" id="bannerInterval" min="1000" max="10000" step="500" value="3000" onchange="homepageConfig.updateConfigValue('banner_interval', this.value)">
+                <span class="config-hint">自动轮播间隔时间（毫秒）</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="config-section">
+            <h4 class="config-section-title">公告设置</h4>
+            <div class="config-row">
+              <div class="config-item">
+                <label>显示数量</label>
+                <input type="number" id="announcementCountConfig" min="1" max="10" value="3" onchange="homepageConfig.updateConfigValue('announcement_count', this.value)">
+                <span class="config-hint">首页显示的公告数量（1-10）</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="config-section">
+            <h4 class="config-section-title">歌曲列表设置</h4>
+            <div class="config-row">
+              <div class="config-item">
+                <label>热门歌曲数量</label>
+                <input type="number" id="hotSongCount" min="1" max="20" value="10" onchange="homepageConfig.updateConfigValue('hot_song_count', this.value)">
+                <span class="config-hint">按播放量排序（1-20）</span>
+              </div>
+              <div class="config-item">
+                <label>新歌推荐数量</label>
+                <input type="number" id="newSongCount" min="1" max="20" value="10" onchange="homepageConfig.updateConfigValue('new_song_count', this.value)">
+                <span class="config-hint">按创建时间排序（1-20）</span>
+              </div>
+              <div class="config-item">
+                <label>推荐歌曲数量</label>
+                <input type="number" id="recommendSongCount" min="1" max="20" value="6" onchange="homepageConfig.updateConfigValue('recommend_song_count', this.value)">
+                <span class="config-hint">手动推荐的歌曲（1-20）</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <h3 class="card-title">
+            轮播图管理
+            <span class="badge" id="bannerCountBadge">0</span>
+          </h3>
+          <button class="btn btn-sm btn-primary" onclick="homepageConfig.showBannerModal()">添加轮播图</button>
+        </div>
+        <div class="card-body">
+          <div id="bannerList" class="sortable-list">
+            <div class="loading-placeholder">加载中...</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <h3 class="card-title">
+            公告管理
+            <span class="badge" id="announcementCountBadge">0</span>
+          </h3>
+          <button class="btn btn-sm btn-primary" onclick="homepageConfig.showAnnouncementModal()">添加公告</button>
+        </div>
+        <div class="card-body">
+          <div id="announcementList">
+            <div class="loading-placeholder">加载中...</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <h3 class="card-title">
+            推荐歌曲管理
+            <span class="badge" id="recommendCountBadge">0</span>
+          </h3>
+          <button class="btn btn-sm btn-primary" onclick="homepageConfig.showRecommendModal()">添加推荐</button>
+        </div>
+        <div class="card-body">
+          <div id="recommendList" class="sortable-list">
+            <div class="loading-placeholder">加载中...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="preview-panel" id="previewPanel" style="display: none;">
+      <div class="preview-header">
+        <span>小程序预览</span>
+        <div class="preview-actions">
+          <button class="btn btn-sm" onclick="homepageConfig.refreshPreview()">刷新</button>
+          <button class="btn btn-sm btn-secondary" onclick="homepageConfig.togglePreview()">关闭</button>
+        </div>
+      </div>
+      <div class="phone-frame">
+        <div class="phone-notch"></div>
+        <div class="phone-screen" id="phoneScreen">
+          <div class="miniapp-header">
+            <span>校园点歌台</span>
+          </div>
+          <div class="miniapp-content" id="miniappContent">
+            <div class="loading-placeholder">加载预览...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="bannerModal" style="display: none;">
+  <div class="modal-content" style="max-width: 500px;">
+    <div class="modal-header">
+      <h3 class="modal-title" id="bannerModalTitle">添加轮播图</h3>
+      <span class="modal-close" onclick="homepageConfig.closeBannerModal()">&times;</span>
+    </div>
+    <div class="modal-body">
+      <form id="bannerForm">
+        <input type="hidden" id="bannerId">
+        <div class="form-group">
+          <label>标题 <span class="required">*</span></label>
+          <input type="text" id="bannerTitle" placeholder="请输入轮播图标题" required>
+        </div>
+        <div class="form-group">
+          <label>图片URL <span class="required">*</span></label>
+          <input type="text" id="bannerImage" placeholder="请输入图片地址">
+          <div id="bannerPreviewImg" class="image-preview"></div>
+        </div>
+        <div class="form-group">
+          <label>跳转链接</label>
+          <input type="text" id="bannerLink" placeholder="点击跳转地址（可选）">
+        </div>
+        <div class="form-group">
+          <label>排序权重</label>
+          <input type="number" id="bannerSort" value="0" placeholder="数字越小越靠前">
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="homepageConfig.closeBannerModal()">取消</button>
+      <button class="btn btn-primary" onclick="homepageConfig.saveBanner()">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="announcementModal" style="display: none;">
+  <div class="modal-content" style="max-width: 500px;">
+    <div class="modal-header">
+      <h3 class="modal-title" id="announcementModalTitle">添加公告</h3>
+      <span class="modal-close" onclick="homepageConfig.closeAnnouncementModal()">&times;</span>
+    </div>
+    <div class="modal-body">
+      <form id="announcementForm">
+        <input type="hidden" id="announcementId">
+        <div class="form-group">
+          <label>标题 <span class="required">*</span></label>
+          <input type="text" id="announcementTitle" placeholder="请输入公告标题" required>
+        </div>
+        <div class="form-group">
+          <label>内容 <span class="required">*</span></label>
+          <textarea id="announcementContent" rows="4" placeholder="请输入公告内容" required></textarea>
+        </div>
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="announcementPinned">
+            <span>置顶显示</span>
+          </label>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="homepageConfig.closeAnnouncementModal()">取消</button>
+      <button class="btn btn-primary" onclick="homepageConfig.saveAnnouncement()">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="recommendModal" style="display: none;">
+  <div class="modal-content" style="max-width: 600px;">
+    <div class="modal-header">
+      <h3 class="modal-title">添加推荐歌曲</h3>
+      <span class="modal-close" onclick="homepageConfig.closeRecommendModal()">&times;</span>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <input type="text" id="recommendSearchInput" placeholder="搜索歌曲名或歌手" onkeyup="if(event.key==='Enter')homepageConfig.searchSongs()">
+      </div>
+      <div id="recommendSearchResult" style="max-height: 300px; overflow-y: auto;">
+        <div style="text-align: center; color: #999; padding: 20px;">输入关键词搜索歌曲</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="homepageConfig.closeRecommendModal()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.header-actions { display: flex; gap: 10px; }
+.config-container { display: flex; gap: 24px; }
+.config-main { flex: 1; min-width: 0; }
+.preview-panel { 
+  width: 375px; 
+  flex-shrink: 0; 
+  background: #f5f5f5; 
+  border-radius: 8px; 
+  padding: 16px;
+  position: sticky;
+  top: 20px;
+  height: fit-content;
+}
+.preview-header { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+.preview-actions { display: flex; gap: 8px; }
+.phone-frame {
+  width: 343px;
+  height: 600px;
+  background: #000;
+  border-radius: 30px;
+  padding: 10px;
+  margin: 0 auto;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+.phone-notch {
+  width: 120px;
+  height: 25px;
+  background: #000;
+  border-radius: 0 0 15px 15px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 10;
+}
+.phone-screen {
+  width: 100%;
+  height: calc(100% - 25px);
+  background: #fff;
+  border-radius: 20px;
+  overflow: hidden;
+}
+.miniapp-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  padding: 12px 16px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 500;
+}
+.miniapp-content {
+  height: calc(100% - 44px);
+  overflow-y: auto;
+  background: #f5f5f5;
+}
+.module-switches { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+.switch-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.switch-item input { display: none; }
+.switch-slider {
+  width: 44px;
+  height: 24px;
+  background: #ccc;
+  border-radius: 12px;
+  position: relative;
+  transition: background 0.3s;
+}
+.switch-slider::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: #fff;
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.3s;
+}
+.switch-item input:checked + .switch-slider { background: #667eea; }
+.switch-item input:checked + .switch-slider::after { transform: translateX(20px); }
+
+.switch-item-small { display: flex; align-items: center; cursor: pointer; }
+.switch-item-small input { display: none; }
+.switch-slider-small {
+  width: 36px;
+  height: 20px;
+  background: #ccc;
+  border-radius: 10px;
+  position: relative;
+  transition: background 0.3s;
+}
+.switch-slider-small::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.3s;
+}
+.switch-item-small input:checked + .switch-slider-small { background: #667eea; }
+.switch-item-small input:checked + .switch-slider-small::after { transform: translateX(16px); }
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  background: #e0e0e0;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: normal;
+  margin-left: 8px;
+  color: #666;
+}
+.config-section { margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid #eee; }
+.config-section:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+.config-section-title { font-size: 14px; font-weight: 500; color: #333; margin-bottom: 16px; padding-left: 12px; border-left: 3px solid #667eea; }
+.config-row { display: flex; flex-wrap: wrap; gap: 24px; }
+.config-item { flex: 1; min-width: 200px; }
+.config-item label { display: block; font-size: 13px; font-weight: 500; color: #333; margin-bottom: 8px; }
+.config-item input[type="number"] { 
+  width: 100%; 
+  padding: 8px 12px; 
+  border: 1px solid #ddd; 
+  border-radius: 6px; 
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+.config-item input[type="number"]:focus { outline: none; border-color: #667eea; }
+.config-hint { display: block; font-size: 12px; color: #999; margin-top: 4px; }
+
+.sortable-list { min-height: 60px; }
+.sortable-item {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  cursor: grab;
+  transition: all 0.2s;
+}
+.sortable-item:hover { border-color: #667eea; box-shadow: 0 2px 8px rgba(102,126,234,0.1); }
+.sortable-item.dragging { opacity: 0.5; transform: scale(1.02); }
+.sortable-item .drag-handle {
+  color: #ccc;
+  margin-right: 12px;
+  cursor: grab;
+}
+.sortable-item .item-image {
+  width: 60px;
+  height: 40px;
+  border-radius: 4px;
+  object-fit: cover;
+  margin-right: 12px;
+  background: #f0f0f0;
+}
+.sortable-item .item-info { flex: 1; }
+.sortable-item .item-title { font-weight: 500; margin-bottom: 2px; }
+.sortable-item .item-meta { font-size: 12px; color: #999; }
+.sortable-item .item-actions { display: flex; gap: 6px; }
+.loading-placeholder { text-align: center; color: #999; padding: 40px; }
+.image-preview { margin-top: 8px; }
+.image-preview img { max-width: 200px; max-height: 100px; border-radius: 4px; }
+.required { color: #e74c3c; }
+.checkbox-label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.checkbox-label input { width: 16px; height: 16px; }
+
+.miniapp-banner { height: 150px; background-size: cover; background-position: center; }
+.miniapp-notice { background: #fff; padding: 12px; margin: 10px; border-radius: 8px; }
+.miniapp-notice-title { font-weight: 500; color: #333; margin-bottom: 4px; }
+.miniapp-notice-content { font-size: 12px; color: #666; line-height: 1.5; }
+.miniapp-section { background: #fff; margin: 10px; border-radius: 8px; overflow: hidden; }
+.miniapp-section-header { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  padding: 12px; 
+  border-bottom: 1px solid #f0f0f0;
+}
+.miniapp-section-title { font-weight: 500; font-size: 14px; }
+.miniapp-section-more { font-size: 12px; color: #999; }
+.miniapp-song-item { display: flex; align-items: center; padding: 8px 12px; }
+.miniapp-song-cover { width: 40px; height: 40px; border-radius: 4px; margin-right: 10px; background: #f0f0f0; }
+.miniapp-song-info { flex: 1; }
+.miniapp-song-name { font-size: 13px; color: #333; }
+.miniapp-song-singer { font-size: 11px; color: #999; }
+
+@media (max-width: 900px) {
+  .config-container { flex-direction: column; }
+  .preview-panel { width: 100%; position: static; }
+  .phone-frame { margin: 0 auto; }
+}
+</style>
+
+<script>
+(function() {
+  let bannerData = [];
+  let announcementData = [];
+  let recommendData = [];
+  let configData = {};
+  let previewVisible = false;
+  let draggedItem = null;
+  
+  window.homepageConfig = {
+    init: function() {
+      this.loadData();
+      this.bindEvents();
+    },
+    
+    bindEvents: function() {
+      document.getElementById('bannerImage').addEventListener('input', function() {
+        const url = this.value.trim();
+        const preview = document.getElementById('bannerPreviewImg');
+        preview.innerHTML = url ? `<img src="${url}" onerror="this.style.display='none'">` : '';
+      });
+    },
+    
+    loadData: async function() {
+      try {
+        const res = await api.homepage.getData();
+        if (res.code === 0) {
+          bannerData = res.data.banners || [];
+          announcementData = res.data.announcements || [];
+          recommendData = res.data.recommendSongs || [];
+          configData = res.data.config || {};
+          
+          this.renderBanners();
+          this.renderAnnouncements();
+          this.renderRecommends();
+          this.loadConfig();
+          this.updatePreview();
+        }
+      } catch (error) {
+        console.error('加载数据失败:', error);
+        api.showError('加载数据失败');
+      }
+    },
+    
+    loadConfig: function() {
+      document.getElementById('showBanners').checked = configData.show_banners !== 0;
+      document.getElementById('showAnnouncements').checked = configData.show_announcements !== 0;
+      document.getElementById('showHotSongs').checked = configData.show_hot_songs !== 0;
+      document.getElementById('showNewSongs').checked = configData.show_new_songs !== 0;
+      document.getElementById('showRecommendSongs').checked = configData.show_recommend_songs !== 0;
+      
+      document.getElementById('bannerCountConfig').value = configData.banner_count || 5;
+      document.getElementById('bannerAutoPlay').checked = configData.banner_auto_play !== 0;
+      document.getElementById('bannerInterval').value = configData.banner_interval || 3000;
+      document.getElementById('announcementCountConfig').value = configData.announcement_count || 3;
+      document.getElementById('hotSongCount').value = configData.hot_song_count || 10;
+      document.getElementById('newSongCount').value = configData.new_song_count || 10;
+      document.getElementById('recommendSongCount').value = configData.recommend_song_count || 6;
+    },
+    
+    renderBanners: function() {
+      const container = document.getElementById('bannerList');
+      document.getElementById('bannerCountBadge').textContent = bannerData.length;
+      
+      if (bannerData.length === 0) {
+        container.innerHTML = '<div class="loading-placeholder">暂无轮播图，点击上方按钮添加</div>';
+        return;
+      }
+      
+      container.innerHTML = bannerData.map((item, index) => `
+        <div class="sortable-item" draggable="true" data-index="${index}" data-id="${item.id}">
+          <span class="drag-handle">☰</span>
+          <img class="item-image" src="${item.image_url || ''}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 60 40%22><rect fill=%22%23f0f0f0%22 width=%2260%22 height=%2240%22/><text x=%2230%22 y=%2225%22 text-anchor=%22middle%22 fill=%22%23999%22 font-size=%2212%22>♪</text></svg>'">
+          <div class="item-info">
+            <div class="item-title">${item.title || '无标题'}</div>
+            <div class="item-meta">排序: ${item.sort || 0} | ${item.link_url ? '有跳转' : '无跳转'}</div>
+          </div>
+          <div class="item-actions">
+            <button class="btn btn-sm btn-secondary" onclick="homepageConfig.editBanner(${item.id})">编辑</button>
+            <button class="btn btn-sm btn-danger" onclick="homepageConfig.deleteBanner(${item.id})">删除</button>
+          </div>
+        </div>
+      `).join('');
+      
+      this.bindDragEvents(container, 'banner');
+    },
+    
+    renderAnnouncements: function() {
+      const container = document.getElementById('announcementList');
+      document.getElementById('announcementCountBadge').textContent = announcementData.length;
+      
+      if (announcementData.length === 0) {
+        container.innerHTML = '<div class="loading-placeholder">暂无公告，点击上方按钮添加</div>';
+        return;
+      }
+      
+      container.innerHTML = announcementData.map(item => `
+        <div class="sortable-item" data-id="${item.id}">
+          <div class="item-info" style="flex: 1;">
+            <div class="item-title">
+              ${item.is_pinned ? '<span style="color: #e74c3c; margin-right: 4px;">[置顶]</span>' : ''}
+              ${item.title || '无标题'}
+            </div>
+            <div class="item-meta">${(item.content || '').substring(0, 50)}${item.content && item.content.length > 50 ? '...' : ''}</div>
+          </div>
+          <div class="item-actions">
+            <button class="btn btn-sm btn-secondary" onclick="homepageConfig.editAnnouncement(${item.id})">编辑</button>
+            <button class="btn btn-sm btn-danger" onclick="homepageConfig.deleteAnnouncement(${item.id})">删除</button>
+          </div>
+        </div>
+      `).join('');
+    },
+    
+    renderRecommends: function() {
+      const container = document.getElementById('recommendList');
+      document.getElementById('recommendCountBadge').textContent = recommendData.length;
+      
+      if (recommendData.length === 0) {
+        container.innerHTML = '<div class="loading-placeholder">暂无推荐歌曲，点击上方按钮添加</div>';
+        return;
+      }
+      
+      container.innerHTML = recommendData.map((item, index) => `
+        <div class="sortable-item" draggable="true" data-index="${index}" data-id="${item.id}">
+          <span class="drag-handle">☰</span>
+          <img class="item-image" src="${item.cover_url || ''}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 60 40%22><rect fill=%22%23f0f0f0%22 width=%2260%22 height=%2240%22/><text x=%2230%22 y=%2225%22 text-anchor=%22middle%22 fill=%22%23999%22 font-size=%2212%22>♪</text></svg>'">
+          <div class="item-info">
+            <div class="item-title">${item.name || '未知歌曲'}</div>
+            <div class="item-meta">${item.singer || '未知歌手'}</div>
+          </div>
+          <div class="item-actions">
+            <button class="btn btn-sm btn-danger" onclick="homepageConfig.deleteRecommend(${item.id})">移除</button>
+          </div>
+        </div>
+      `).join('');
+      
+      this.bindDragEvents(container, 'recommend');
+    },
+    
+    bindDragEvents: function(container, type) {
+      const items = container.querySelectorAll('.sortable-item');
+      
+      items.forEach(item => {
+        item.addEventListener('dragstart', (e) => {
+          draggedItem = item;
+          item.classList.add('dragging');
+          e.dataTransfer.effectAllowed = 'move';
+        });
+        
+        item.addEventListener('dragend', () => {
+          item.classList.remove('dragging');
+          draggedItem = null;
+          items.forEach(i => i.classList.remove('drag-over'));
+        });
+        
+        item.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          if (draggedItem && draggedItem !== item) {
+            item.style.borderColor = '#667eea';
+          }
+        });
+        
+        item.addEventListener('dragleave', () => {
+          item.style.borderColor = '';
+        });
+        
+        item.addEventListener('drop', (e) => {
+          e.preventDefault();
+          item.style.borderColor = '';
+          
+          if (draggedItem && draggedItem !== item) {
+            const fromIndex = parseInt(draggedItem.dataset.index);
+            const toIndex = parseInt(item.dataset.index);
+            
+            if (type === 'banner') {
+              const movedItem = bannerData.splice(fromIndex, 1)[0];
+              bannerData.splice(toIndex, 0, movedItem);
+              this.renderBanners();
+              this.saveBannerOrder();
+            } else if (type === 'recommend') {
+              const movedItem = recommendData.splice(fromIndex, 1)[0];
+              recommendData.splice(toIndex, 0, movedItem);
+              this.renderRecommends();
+              this.saveRecommendOrder();
+            }
+          }
+        });
+      });
+    },
+    
+    saveBannerOrder: async function() {
+      const orders = bannerData.map((item, index) => ({ id: item.id, sort: index }));
+      for (const order of orders) {
+        await api.homepage.updateBanner(order.id, { sort: order.sort });
+      }
+      this.updatePreview();
+    },
+    
+    saveRecommendOrder: async function() {
+      const orders = recommendData.map((item, index) => ({ id: item.id, sort: index }));
+      for (const order of orders) {
+        await api.homepage.updateRecommendSong(order.id, { sort: order.sort });
+      }
+      this.updatePreview();
+    },
+    
+    updateModuleSwitch: async function(field, value) {
+      const data = {
+        show_banners: document.getElementById('showBanners').checked,
+        show_announcements: document.getElementById('showAnnouncements').checked,
+        show_hot_songs: document.getElementById('showHotSongs').checked,
+        show_new_songs: document.getElementById('showNewSongs').checked,
+        show_recommend_songs: document.getElementById('showRecommendSongs').checked
+      };
+      
+      try {
+        const res = await api.homepage.updateConfig(data);
+        if (res.code === 0) {
+          api.showSuccess('配置已更新');
+          this.updatePreview();
+        }
+      } catch (error) {
+        api.showError('更新失败');
+      }
+    },
+    
+    updateConfigValue: async function(field, value) {
+      try {
+        const res = await api.homepage.updateConfig({ [field]: value });
+        if (res.code === 0) {
+          api.showSuccess('配置已更新');
+          this.updatePreview();
+        }
+      } catch (error) {
+        api.showError('更新失败');
+      }
+    },
+    
+    showBannerModal: function(id = null) {
+      document.getElementById('bannerModalTitle').textContent = id ? '编辑轮播图' : '添加轮播图';
+      document.getElementById('bannerForm').reset();
+      document.getElementById('bannerId').value = '';
+      document.getElementById('bannerPreviewImg').innerHTML = '';
+      
+      if (id) {
+        const banner = bannerData.find(b => b.id === id);
+        if (banner) {
+          document.getElementById('bannerId').value = id;
+          document.getElementById('bannerTitle').value = banner.title || '';
+          document.getElementById('bannerImage').value = banner.image_url || '';
+          document.getElementById('bannerLink').value = banner.link_url || '';
+          document.getElementById('bannerSort').value = banner.sort || 0;
+          if (banner.image_url) {
+            document.getElementById('bannerPreviewImg').innerHTML = `<img src="${banner.image_url}">`;
+          }
+        }
+      }
+      
+      document.getElementById('bannerModal').style.display = 'flex';
+    },
+    
+    closeBannerModal: function() {
+      document.getElementById('bannerModal').style.display = 'none';
+    },
+    
+    editBanner: function(id) {
+      this.showBannerModal(id);
+    },
+    
+    saveBanner: async function() {
+      const id = document.getElementById('bannerId').value;
+      const data = {
+        title: document.getElementById('bannerTitle').value.trim(),
+        image_url: document.getElementById('bannerImage').value.trim(),
+        link_url: document.getElementById('bannerLink').value.trim(),
+        sort: parseInt(document.getElementById('bannerSort').value) || 0
+      };
+      
+      if (!data.title || !data.image_url) {
+        api.showError('请填写标题和图片URL');
+        return;
+      }
+      
+      try {
+        let res;
+        if (id) {
+          res = await api.homepage.updateBanner(id, data);
+        } else {
+          res = await api.homepage.addBanner(data);
+        }
+        
+        if (res.code === 0) {
+          api.showSuccess(id ? '修改成功' : '添加成功');
+          this.closeBannerModal();
+          this.loadData();
+        } else {
+          api.showError(res.msg || '操作失败');
+        }
+      } catch (error) {
+        api.showError('操作失败');
+      }
+    },
+    
+    deleteBanner: async function(id) {
+      if (!await app.confirm('确定要删除这个轮播图吗？')) return;
+      
+      try {
+        const res = await api.homepage.deleteBanner(id);
+        if (res.code === 0) {
+          api.showSuccess('删除成功');
+          this.loadData();
+        }
+      } catch (error) {
+        api.showError('删除失败');
+      }
+    },
+    
+    showAnnouncementModal: function(id = null) {
+      document.getElementById('announcementModalTitle').textContent = id ? '编辑公告' : '添加公告';
+      document.getElementById('announcementForm').reset();
+      document.getElementById('announcementId').value = '';
+      document.getElementById('announcementPinned').checked = false;
+      
+      if (id) {
+        const announcement = announcementData.find(a => a.id === id);
+        if (announcement) {
+          document.getElementById('announcementId').value = id;
+          document.getElementById('announcementTitle').value = announcement.title || '';
+          document.getElementById('announcementContent').value = announcement.content || '';
+          document.getElementById('announcementPinned').checked = announcement.is_pinned === 1;
+        }
+      }
+      
+      document.getElementById('announcementModal').style.display = 'flex';
+    },
+    
+    closeAnnouncementModal: function() {
+      document.getElementById('announcementModal').style.display = 'none';
+    },
+    
+    editAnnouncement: function(id) {
+      this.showAnnouncementModal(id);
+    },
+    
+    saveAnnouncement: async function() {
+      const id = document.getElementById('announcementId').value;
+      const data = {
+        title: document.getElementById('announcementTitle').value.trim(),
+        content: document.getElementById('announcementContent').value.trim(),
+        is_pinned: document.getElementById('announcementPinned').checked
+      };
+      
+      if (!data.title || !data.content) {
+        api.showError('请填写标题和内容');
+        return;
+      }
+      
+      try {
+        let res;
+        if (id) {
+          res = await api.homepage.updateAnnouncement(id, data);
+        } else {
+          res = await api.homepage.addAnnouncement(data);
+        }
+        
+        if (res.code === 0) {
+          api.showSuccess(id ? '修改成功' : '添加成功');
+          this.closeAnnouncementModal();
+          this.loadData();
+        } else {
+          api.showError(res.msg || '操作失败');
+        }
+      } catch (error) {
+        api.showError('操作失败');
+      }
+    },
+    
+    deleteAnnouncement: async function(id) {
+      if (!await app.confirm('确定要删除这个公告吗？')) return;
+      
+      try {
+        const res = await api.homepage.deleteAnnouncement(id);
+        if (res.code === 0) {
+          api.showSuccess('删除成功');
+          this.loadData();
+        }
+      } catch (error) {
+        api.showError('删除失败');
+      }
+    },
+    
+    showRecommendModal: function() {
+      document.getElementById('recommendSearchInput').value = '';
+      document.getElementById('recommendSearchResult').innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">输入关键词搜索歌曲</div>';
+      document.getElementById('recommendModal').style.display = 'flex';
+    },
+    
+    closeRecommendModal: function() {
+      document.getElementById('recommendModal').style.display = 'none';
+    },
+    
+    searchSongs: async function() {
+      const keyword = document.getElementById('recommendSearchInput').value.trim();
+      if (!keyword) {
+        document.getElementById('recommendSearchResult').innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">请输入搜索关键词</div>';
+        return;
+      }
+      
+      try {
+        const res = await api.song.search(keyword);
+        if (res.code === 0 && res.data && res.data.length > 0) {
+          document.getElementById('recommendSearchResult').innerHTML = res.data.map(song => `
+            <div class="song-search-item" onclick="homepageConfig.addRecommend(${song.id}, '${song.name.replace(/'/g, "\\'")}', '${song.singer.replace(/'/g, "\\'")}')">
+              <img src="${song.cover_url || ''}" onerror="this.style.display='none'">
+              <div class="song-info">
+                <div class="song-name">${song.name}</div>
+                <div class="song-singer">${song.singer}</div>
+              </div>
+              <button class="btn btn-sm btn-primary">添加</button>
+            </div>
+          `).join('');
+        } else {
+          document.getElementById('recommendSearchResult').innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">未找到相关歌曲</div>';
+        }
+      } catch (error) {
+        api.showError('搜索失败');
+      }
+    },
+    
+    addRecommend: async function(songId, songName, singer) {
+      try {
+        const res = await api.homepage.addRecommendSong({ song_id: songId, sort: recommendData.length });
+        if (res.code === 0) {
+          api.showSuccess(`已添加「${songName}」到推荐列表`);
+          this.closeRecommendModal();
+          this.loadData();
+        } else {
+          api.showError(res.msg || '添加失败');
+        }
+      } catch (error) {
+        api.showError('添加失败');
+      }
+    },
+    
+    deleteRecommend: async function(id) {
+      if (!await app.confirm('确定要从推荐列表中移除这首歌曲吗？')) return;
+      
+      try {
+        const res = await api.homepage.deleteRecommendSong(id);
+        if (res.code === 0) {
+          api.showSuccess('移除成功');
+          this.loadData();
+        }
+      } catch (error) {
+        api.showError('移除失败');
+      }
+    },
+    
+    togglePreview: function() {
+      previewVisible = !previewVisible;
+      document.getElementById('previewPanel').style.display = previewVisible ? 'block' : 'none';
+      document.getElementById('configMain').style.width = previewVisible ? 'calc(100% - 400px)' : '100%';
+      if (previewVisible) {
+        this.updatePreview();
+      }
+    },
+    
+    refreshPreview: function() {
+      this.updatePreview();
+    },
+    
+    updatePreview: function() {
+      if (!previewVisible) return;
+      
+      const content = document.getElementById('miniappContent');
+      let html = '';
+      
+      if (configData.show_banners !== 0 && bannerData.length > 0) {
+        html += `
+          <div class="miniapp-banner" style="background-image: url('${bannerData[0].image_url}'); background-color: #f0f0f0;"></div>
+        `;
+      }
+      
+      if (configData.show_announcements !== 0 && announcementData.length > 0) {
+        html += `
+          <div class="miniapp-notice">
+            <div class="miniapp-notice-title">${announcementData[0].title}</div>
+            <div class="miniapp-notice-content">${(announcementData[0].content || '').substring(0, 60)}...</div>
+          </div>
+        `;
+      }
+      
+      if (configData.show_recommend_songs !== 0 && recommendData.length > 0) {
+        html += `
+          <div class="miniapp-section">
+            <div class="miniapp-section-header">
+              <span class="miniapp-section-title">推荐歌曲</span>
+              <span class="miniapp-section-more">更多 ></span>
+            </div>
+            ${recommendData.slice(0, 3).map(song => `
+              <div class="miniapp-song-item">
+                <img class="miniapp-song-cover" src="${song.cover_url || ''}" onerror="this.style.background='#f0f0f0'">
+                <div class="miniapp-song-info">
+                  <div class="miniapp-song-name">${song.name || '未知'}</div>
+                  <div class="miniapp-song-singer">${song.singer || '未知歌手'}</div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+      
+      content.innerHTML = html || '<div class="loading-placeholder">暂无内容</div>';
+    },
+    
+    publishConfig: async function() {
+      if (!await app.confirm('确定要发布当前配置吗？发布后将立即同步到小程序端。')) return;
+      
+      try {
+        const res = await api.homepage.updateConfig({
+          show_banners: document.getElementById('showBanners').checked,
+          show_announcements: document.getElementById('showAnnouncements').checked,
+          show_hot_songs: document.getElementById('showHotSongs').checked,
+          show_new_songs: document.getElementById('showNewSongs').checked,
+          show_recommend_songs: document.getElementById('showRecommendSongs').checked,
+          banner_count: parseInt(document.getElementById('bannerCountConfig').value) || 5,
+          banner_auto_play: document.getElementById('bannerAutoPlay').checked,
+          banner_interval: parseInt(document.getElementById('bannerInterval').value) || 3000,
+          announcement_count: parseInt(document.getElementById('announcementCountConfig').value) || 3,
+          hot_song_count: parseInt(document.getElementById('hotSongCount').value) || 10,
+          new_song_count: parseInt(document.getElementById('newSongCount').value) || 10,
+          recommend_song_count: parseInt(document.getElementById('recommendSongCount').value) || 6
+        });
+        
+        if (res.code === 0) {
+          api.showSuccess('配置已发布，小程序端将实时同步');
+        } else {
+          api.showError(res.msg || '发布失败');
+        }
+      } catch (error) {
+        api.showError('发布失败');
+      }
+    }
+  };
+  
+  window.initHomepagePage = function() {
+    homepageConfig.init();
+  };
+  
+  window.initHomepagePage();
+})();
+</script>
+
+<style>
+.song-search-item {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+}
+.song-search-item:hover { background: #f5f7fa; }
+.song-search-item img { width: 40px; height: 40px; border-radius: 4px; margin-right: 12px; }
+.song-search-item .song-info { flex: 1; }
+.song-search-item .song-name { font-weight: 500; }
+.song-search-item .song-singer { font-size: 12px; color: #999; }
+</style>

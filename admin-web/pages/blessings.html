@@ -1,0 +1,326 @@
+<div class="content">
+  <div class="page-header">
+    <div>
+      <h2>祝福管理</h2>
+      <p style="color: var(--text-color-secondary); margin-top: 4px; font-size: 14px;">审核和管理用户提交的祝福语</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="filter-bar">
+        <div class="filter-item">
+          <label style="font-size: 13px; color: var(--text-color-secondary);">状态筛选</label>
+          <select id="statusFilter" style="width: 120px;" onchange="blessingsPage.loadData()">
+            <option value="0">待审核</option>
+            <option value="1">已通过</option>
+            <option value="2">已拒绝</option>
+            <option value="">全部</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="blessingsPage.loadData()">
+          <span>🔍</span> 搜索
+        </button>
+      </div>
+    </div>
+    
+    <div class="card-body" style="padding: 0;">
+      <div id="blessingList">
+        <div class="loading-state">
+          <div class="loading-spinner"></div>
+          <p>加载中...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.filter-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.blessing-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.blessing-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-color-split);
+  transition: background var(--transition-fast);
+  gap: 16px;
+}
+
+.blessing-item:last-child {
+  border-bottom: none;
+}
+
+.blessing-item:hover {
+  background: var(--bg-color-component-hover);
+}
+
+.blessing-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #eb2f96 0%, #ff85c0 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.blessing-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.blessing-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.blessing-user {
+  font-weight: 600;
+  color: var(--text-color);
+  font-size: 15px;
+}
+
+.blessing-time {
+  font-size: 12px;
+  color: var(--text-color-disabled);
+}
+
+.blessing-text {
+  font-size: 14px;
+  color: var(--text-color);
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.blessing-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 24px;
+  color: var(--text-color-secondary);
+}
+
+.empty-state .icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.empty-state p {
+  font-size: 15px;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 60px 24px;
+  color: var(--text-color-secondary);
+}
+
+.loading-state .loading-spinner {
+  margin: 0 auto 16px;
+}
+
+@media (max-width: 768px) {
+  .blessing-item {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .blessing-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+  
+  .blessing-actions {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-color-split);
+  }
+}
+</style>
+
+<script>
+(function() {
+  let currentPage = 1;
+  let pageSize = 10;
+  
+  window.blessingsPage = {
+    init: function() {
+      this.loadData();
+    },
+    
+    loadData: async function() {
+      const status = document.getElementById('statusFilter').value;
+      const container = document.getElementById('blessingList');
+      
+      container.innerHTML = `
+        <div class="loading-state">
+          <div class="loading-spinner"></div>
+          <p>加载中...</p>
+        </div>
+      `;
+      
+      try {
+        const res = await api.blessing.getList({
+          page: currentPage,
+          pageSize,
+          status: status !== '' ? parseInt(status) : undefined
+        });
+        
+        this.renderList(res);
+      } catch (error) {
+        console.error('加载列表失败:', error);
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="icon">⚠️</div>
+            <p>加载失败，请重试</p>
+          </div>
+        `;
+      }
+    },
+    
+    renderList: function(res) {
+      const container = document.getElementById('blessingList');
+      
+      if (res.code !== 0 || !res.data || !res.data.list || res.data.list.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="icon">💌</div>
+            <p>暂无祝福数据</p>
+          </div>
+        `;
+        return;
+      }
+      
+      const startIndex = (currentPage - 1) * pageSize;
+      
+      let html = '<div class="blessing-list">';
+      
+      res.data.list.forEach((item, index) => {
+        const statusClass = this.getStatusClass(item.status);
+        const statusText = this.getStatusText(item.status);
+        const avatar = (item.nickname || '匿').charAt(0);
+        
+        html += `
+          <div class="blessing-item">
+            <div class="blessing-avatar">${avatar}</div>
+            <div class="blessing-content">
+              <div class="blessing-header">
+                <span class="blessing-user">${item.nickname || '匿名用户'}</span>
+                <span class="status-tag ${statusClass}">${statusText}</span>
+                <span class="blessing-time">${this.formatTime(item.create_time)}</span>
+              </div>
+              <div class="blessing-text">${item.content || '-'}</div>
+            </div>
+            <div class="blessing-actions">
+              ${item.status === 0 ? `
+                <button class="btn btn-sm btn-success" onclick="blessingsPage.handleAudit(${item.id}, 1)">
+                  <span>✓</span> 通过
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="blessingsPage.handleAudit(${item.id}, 2)">
+                  <span>✕</span> 拒绝
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      });
+      
+      html += '</div>';
+      
+      if (res.data.total > pageSize) {
+        html += this.renderPagination(res.data.total);
+      }
+      
+      container.innerHTML = html;
+    },
+    
+    renderPagination: function(total) {
+      const totalPages = Math.ceil(total / pageSize);
+      
+      let html = '<div class="pagination" style="padding: 16px 24px; border-top: 1px solid var(--border-color-split);">';
+      html += `<span style="color: var(--text-color-secondary); margin-right: 12px; font-size: 13px;">共 ${total} 条</span>`;
+      html += `<button ${currentPage === 1 ? 'disabled' : ''} onclick="blessingsPage.goToPage(${currentPage - 1})">上一页</button>`;
+      
+      for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+          html += `<button class="${i === currentPage ? 'active' : ''}" onclick="blessingsPage.goToPage(${i})">${i}</button>`;
+        }
+      }
+      
+      html += `<button ${currentPage === totalPages ? 'disabled' : ''} onclick="blessingsPage.goToPage(${currentPage + 1})">下一页</button>`;
+      html += '</div>';
+      
+      return html;
+    },
+    
+    goToPage: function(page) {
+      currentPage = page;
+      this.loadData();
+    },
+    
+    handleAudit: async function(id, status) {
+      const action = status === 1 ? '通过' : '拒绝';
+      
+      if (!await app.confirm(`确定要${action}这条祝福吗？`)) {
+        return;
+      }
+      
+      try {
+        const res = await api.blessing.audit(id, { status });
+        if (res.code === 0) {
+          api.showSuccess(`${action}成功`);
+          this.loadData();
+        } else {
+          api.showError(res.msg || `${action}失败`);
+        }
+      } catch (error) {
+        console.error('审核失败:', error);
+        api.showError('操作失败');
+      }
+    },
+    
+    getStatusClass: function(status) {
+      const map = { 0: 'status-pending', 1: 'status-approved', 2: 'status-rejected' };
+      return map[status] || '';
+    },
+    
+    getStatusText: function(status) {
+      const map = { 0: '待审核', 1: '已通过', 2: '已拒绝' };
+      return map[status] || '未知';
+    },
+    
+    formatTime: function(time) {
+      if (!time) return '-';
+      const date = new Date(time);
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+    }
+  };
+  
+  window.initBlessingsPage = function() {
+    blessingsPage.init();
+  };
+  
+  window.initBlessingsPage();
+})();
+</script>

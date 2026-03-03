@@ -1,0 +1,2067 @@
+<div class="content">
+  <div class="page-header">
+    <div>
+      <h2>用户管理</h2>
+      <p style="color: var(--text-color-secondary); margin-top: 4px; font-size: 14px;">管理注册用户，支持批量操作和高级筛选</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-secondary" onclick="usersPage.showImportModal()">
+        <span>📥</span> 导入
+      </button>
+      <button class="btn btn-secondary" onclick="usersPage.showExportModal()">
+        <span>📤</span> 导出
+      </button>
+      <button class="btn btn-primary" onclick="usersPage.showBatchEditModal()">
+        <span>✏️</span> 批量操作
+      </button>
+    </div>
+  </div>
+
+  <div class="card filter-card">
+    <div class="filter-header" onclick="usersPage.toggleAdvancedFilter()">
+      <span>高级筛选</span>
+      <span class="toggle-icon" id="filterToggleIcon">▼</span>
+    </div>
+    <div class="filter-body" id="advancedFilterBody">
+      <div class="filter-row">
+        <div class="filter-item">
+          <label>关键词</label>
+          <input type="text" id="searchKeyword" placeholder="搜索用户名/学号/昵称">
+        </div>
+        <div class="filter-item">
+          <label>学院</label>
+          <select id="filterCollege" onchange="usersPage.loadClassesByCollege()">
+            <option value="">全部学院</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <label>班级</label>
+          <select id="filterClass">
+            <option value="">全部班级</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <label>年级</label>
+          <select id="filterGrade">
+            <option value="">全部年级</option>
+          </select>
+        </div>
+      </div>
+      <div class="filter-row">
+        <div class="filter-item">
+          <label>辅导员</label>
+          <input type="text" id="filterCounselor" placeholder="辅导员姓名">
+        </div>
+        <div class="filter-item">
+          <label>状态</label>
+          <select id="filterStatus">
+            <option value="">全部状态</option>
+            <option value="0">正常</option>
+            <option value="1">已禁用</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <label>注册时间</label>
+          <input type="date" id="filterStartDate"> 至 <input type="date" id="filterEndDate">
+        </div>
+        <div class="filter-item filter-actions">
+          <button class="btn btn-primary" onclick="usersPage.loadData()">搜索</button>
+          <button class="btn btn-secondary" onclick="usersPage.resetFilter()">重置</button>
+          <button class="btn btn-secondary" onclick="usersPage.saveFilter()">保存条件</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+      <div class="batch-actions" id="batchActions" style="display: none;">
+        <span class="selected-count">已选择 <strong id="selectedCount">0</strong> 个用户</span>
+        <button class="btn btn-sm btn-secondary" onclick="usersPage.selectAll()">全选</button>
+        <button class="btn btn-sm btn-secondary" onclick="usersPage.clearSelection()">取消选择</button>
+        <button class="btn btn-sm btn-primary" onclick="usersPage.batchUpdateStatus(0)">批量启用</button>
+        <button class="btn btn-sm btn-danger" onclick="usersPage.batchUpdateStatus(1)">批量禁用</button>
+        <button class="btn btn-sm btn-warning" onclick="usersPage.showBatchPasswordModal()">批量重置密码</button>
+        <button class="btn btn-sm btn-danger" onclick="usersPage.batchDelete()">批量删除</button>
+      </div>
+      <div class="view-toggle">
+        <button class="btn btn-sm" id="viewTable" onclick="usersPage.setView('table')">列表</button>
+        <button class="btn btn-sm" id="viewTree" onclick="usersPage.setView('tree')">树状</button>
+      </div>
+    </div>
+    
+    <div class="card-body" style="padding: 0;">
+      <div id="userListContainer">
+        <div class="loading-state">
+          <div class="loading-spinner"></div>
+          <p>加载中...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="importModal" style="display: none;">
+  <div class="modal-content" style="max-width: 600px;">
+    <div class="modal-header">
+      <h3 class="modal-title">批量导入用户</h3>
+      <span class="modal-close" onclick="usersPage.closeImportModal()">&times;</span>
+    </div>
+    <div class="modal-body">
+      <div class="import-steps">
+        <div class="step active" data-step="1">
+          <span class="step-num">1</span>
+          <span class="step-text">选择文件</span>
+        </div>
+        <div class="step" data-step="2">
+          <span class="step-num">2</span>
+          <span class="step-text">数据预览</span>
+        </div>
+        <div class="step" data-step="3">
+          <span class="step-num">3</span>
+          <span class="step-text">导入进度</span>
+        </div>
+        <div class="step" data-step="4">
+          <span class="step-num">4</span>
+          <span class="step-text">导入结果</span>
+        </div>
+      </div>
+      
+      <div class="import-content" id="importStep1">
+        <div class="form-group">
+          <label>导入模式</label>
+          <select id="importMode">
+            <option value="increment">增量导入（更新现有用户）</option>
+            <option value="full">全量导入（覆盖/新增用户）</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>选择文件</label>
+          <div class="file-upload-area" id="fileUploadArea">
+            <input type="file" id="importFile" accept=".xlsx,.xls,.csv" style="display: none;" onchange="usersPage.handleFileSelect(this)">
+            <div class="upload-placeholder" onclick="document.getElementById('importFile').click()">
+              <span class="upload-icon">📁</span>
+              <span>点击或拖拽文件到此处</span>
+              <span class="upload-hint">支持 .xlsx, .xls, .csv 格式</span>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <a href="javascript:void(0)" onclick="usersPage.downloadTemplate()">下载导入模板</a>
+        </div>
+      </div>
+      
+      <div class="import-content" id="importStep2" style="display: none;">
+        <div class="preview-stats">
+          <span>共 <strong id="previewTotal">0</strong> 条数据</span>
+          <span class="valid">有效: <strong id="previewValid">0</strong></span>
+          <span class="invalid">无效: <strong id="previewInvalid">0</strong></span>
+        </div>
+        <div class="preview-table-container">
+          <table class="preview-table" id="previewTable"></table>
+        </div>
+      </div>
+      
+      <div class="import-content" id="importStep3" style="display: none;">
+        <div class="import-progress-container">
+          <div class="progress-header">
+            <span class="progress-title">正在导入...</span>
+            <span class="progress-percent" id="importProgressPercent">0%</span>
+          </div>
+          <div class="progress-bar-wrapper">
+            <div class="progress-bar" id="importProgressBar" style="width: 0%"></div>
+          </div>
+          <div class="progress-detail">
+            <span>已处理: <strong id="importProcessed">0</strong> / <strong id="importTotal">0</strong></span>
+            <span>成功: <strong id="importCurrentSuccess">0</strong></span>
+            <span>更新: <strong id="importCurrentUpdated">0</strong></span>
+            <span>失败: <strong id="importCurrentFailed">0</strong></span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="import-content" id="importStep4" style="display: none;">
+        <div class="import-result">
+          <div class="result-icon" id="resultIcon">✅</div>
+          <div class="result-text" id="resultText">导入完成</div>
+          <div class="result-stats">
+            <div class="stat-item success">
+              <span class="stat-label">成功导入</span>
+              <span class="stat-value" id="importSuccess">0</span>
+            </div>
+            <div class="stat-item warning">
+              <span class="stat-label">更新用户</span>
+              <span class="stat-value" id="importUpdated">0</span>
+            </div>
+            <div class="stat-item error">
+              <span class="stat-label">失败</span>
+              <span class="stat-value" id="importFailed">0</span>
+            </div>
+          </div>
+          <button class="btn btn-secondary" onclick="usersPage.downloadImportReport()">下载导入报告</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="usersPage.closeImportModal()">取消</button>
+      <button class="btn btn-primary" id="importNextBtn" disabled>下一步</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="exportModal" style="display: none;">
+  <div class="modal-content" style="max-width: 500px;">
+    <div class="modal-header">
+      <h3 class="modal-title">导出用户数据</h3>
+      <span class="modal-close" onclick="usersPage.closeExportModal()">&times;</span>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>导出格式</label>
+        <select id="exportFormat">
+          <option value="xlsx">Excel (.xlsx)</option>
+          <option value="csv">CSV (.csv)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>导出范围</label>
+        <select id="exportRange">
+          <option value="current">当前筛选结果</option>
+          <option value="selected">已选择的用户</option>
+          <option value="all">全部用户</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>导出字段</label>
+        <div class="checkbox-group">
+          <label class="checkbox-item"><input type="checkbox" value="id" checked disabled> 用户ID</label>
+          <label class="checkbox-item"><input type="checkbox" value="student_id" checked> 学号</label>
+          <label class="checkbox-item"><input type="checkbox" value="real_name" checked> 姓名</label>
+          <label class="checkbox-item"><input type="checkbox" value="nickname" checked> 昵称</label>
+          <label class="checkbox-item"><input type="checkbox" value="college" checked> 学院</label>
+          <label class="checkbox-item"><input type="checkbox" value="major" checked> 专业</label>
+          <label class="checkbox-item"><input type="checkbox" value="grade" checked> 年级</label>
+          <label class="checkbox-item"><input type="checkbox" value="class_name" checked> 班级</label>
+          <label class="checkbox-item"><input type="checkbox" value="counselor" checked> 辅导员</label>
+          <label class="checkbox-item"><input type="checkbox" value="phone"> 手机号</label>
+          <label class="checkbox-item"><input type="checkbox" value="wechat_name"> 微信名称</label>
+          <label class="checkbox-item"><input type="checkbox" value="wechat_account"> 微信账号</label>
+          <label class="checkbox-item"><input type="checkbox" value="request_count"> 点歌次数</label>
+          <label class="checkbox-item"><input type="checkbox" value="blessing_count"> 祝福次数</label>
+          <label class="checkbox-item"><input type="checkbox" value="status"> 状态</label>
+          <label class="checkbox-item"><input type="checkbox" value="create_time"> 注册时间</label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="usersPage.closeExportModal()">取消</button>
+      <button class="btn btn-primary" onclick="usersPage.executeExport()">导出</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="batchEditModal" style="display: none;">
+  <div class="modal-content" style="max-width: 500px;">
+    <div class="modal-header">
+      <h3 class="modal-title">批量修改用户信息</h3>
+      <span class="modal-close" onclick="usersPage.closeBatchEditModal()">&times;</span>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>选择用户</label>
+        <div class="user-select-area">
+          <input type="text" id="batchUserSearch" placeholder="搜索用户..." oninput="usersPage.searchBatchUsers()">
+        </div>
+        <div class="selected-users" id="selectedUsersPreview"></div>
+      </div>
+      <div class="form-group">
+        <label>修改字段</label>
+        <select id="batchEditField" onchange="usersPage.updateBatchEditValue()">
+          <option value="">请选择要修改的字段</option>
+          <option value="college">学院</option>
+          <option value="major">专业</option>
+          <option value="grade">年级</option>
+          <option value="class_name">班级</option>
+          <option value="counselor">辅导员</option>
+        </select>
+      </div>
+      <div class="form-group" id="batchEditValueGroup" style="display: none;">
+        <label id="batchEditValueLabel">新值</label>
+        <input type="text" id="batchEditValue" placeholder="请输入新值">
+      </div>
+      <div class="preview-section" id="batchEditPreview" style="display: none;">
+        <h4>修改预览</h4>
+        <div id="batchEditPreviewContent"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="usersPage.closeBatchEditModal()">取消</button>
+      <button class="btn btn-primary" onclick="usersPage.executeBatchEdit()">确认修改</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="batchPasswordModal" style="display: none;">
+  <div class="modal-content" style="max-width: 500px;">
+    <div class="modal-header">
+      <h3 class="modal-title">批量密码管理</h3>
+      <span class="modal-close" onclick="usersPage.closeBatchPasswordModal()">&times;</span>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>操作类型</label>
+        <select id="passwordOperation" onchange="usersPage.updatePasswordOperation()">
+          <option value="reset">重置为默认密码</option>
+          <option value="set">设置统一密码</option>
+          <option value="random">生成随机密码</option>
+        </select>
+      </div>
+      <div class="form-group" id="defaultPasswordGroup">
+        <label>默认密码</label>
+        <input type="text" id="defaultPassword" value="123456">
+        <span class="form-hint">用户首次登录后建议修改密码</span>
+      </div>
+      <div class="form-group" id="randomPasswordOptions" style="display: none;">
+        <label>密码长度</label>
+        <input type="number" id="randomPasswordLength" value="8" min="6" max="16">
+      </div>
+      <div class="warning-box">
+        <span class="warning-icon">⚠️</span>
+        <span>此操作将影响 <strong id="passwordAffectedCount">0</strong> 个用户，请谨慎操作</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="usersPage.closeBatchPasswordModal()">取消</button>
+      <button class="btn btn-danger" onclick="usersPage.executeBatchPassword()">确认执行</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="userDetailModal" style="display: none;">
+  <div class="modal-content" style="max-width: 600px;">
+    <div class="modal-header">
+      <h3 class="modal-title">用户详情</h3>
+      <span class="modal-close" onclick="usersPage.closeUserDetailModal()">&times;</span>
+    </div>
+    <div class="modal-body" id="userDetailContent">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="usersPage.closeUserDetailModal()">关闭</button>
+      <button class="btn btn-primary" onclick="usersPage.editCurrentUser()">编辑</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="editModal" style="display: none;">
+  <div class="modal-content" style="max-width: 500px;">
+    <div class="modal-header">
+      <h3 class="modal-title">编辑用户</h3>
+      <span class="modal-close" onclick="usersPage.closeEditModal()">&times;</span>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editUserId">
+      <div class="form-row">
+        <div class="form-group">
+          <label>学号</label>
+          <input type="text" id="editStudentId" placeholder="请输入学号">
+        </div>
+        <div class="form-group">
+          <label>姓名</label>
+          <input type="text" id="editUserRealName" placeholder="请输入姓名">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>昵称</label>
+          <input type="text" id="editNickname" placeholder="请输入昵称">
+        </div>
+        <div class="form-group">
+          <label>手机号</label>
+          <input type="text" id="editPhone" placeholder="请输入手机号">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>学院</label>
+          <input type="text" id="editCollege" placeholder="请输入学院">
+        </div>
+        <div class="form-group">
+          <label>专业</label>
+          <input type="text" id="editMajor" placeholder="请输入专业">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>年级</label>
+          <input type="text" id="editGrade" placeholder="请输入年级">
+        </div>
+        <div class="form-group">
+          <label>班级</label>
+          <input type="text" id="editClassName" placeholder="请输入班级">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>辅导员</label>
+          <input type="text" id="editCounselor" placeholder="请输入辅导员">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>微信名称</label>
+          <input type="text" id="editWechatName" placeholder="请输入微信名称">
+        </div>
+        <div class="form-group">
+          <label>微信账号</label>
+          <input type="text" id="editWechatAccount" placeholder="请输入微信账号">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="usersPage.closeEditModal()">取消</button>
+      <button class="btn btn-primary" onclick="usersPage.saveEdit()">保存</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.form-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.form-row .form-group {
+  flex: 1;
+  margin-bottom: 0;
+}
+</style>
+
+<style>
+.header-actions { display: flex; gap: 10px; }
+.filter-card { margin-bottom: 16px; }
+.filter-header { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  padding: 12px 16px; 
+  background: #f8f9fa; 
+  cursor: pointer;
+  border-radius: 8px 8px 0 0;
+}
+.filter-header:hover { background: #f0f1f2; }
+.toggle-icon { transition: transform 0.3s; }
+.toggle-icon.collapsed { transform: rotate(-90deg); }
+.filter-body { 
+  padding: 16px; 
+  border-top: 1px solid #eee;
+  display: block;
+}
+.filter-body.hidden { display: none; }
+.filter-row { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 12px; }
+.filter-row:last-child { margin-bottom: 0; }
+.filter-item { display: flex; flex-direction: column; gap: 6px; min-width: 150px; }
+.filter-item label { font-size: 13px; color: #666; font-weight: 500; }
+.filter-item input, .filter-item select { padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+.filter-item input:focus, .filter-item select:focus { outline: none; border-color: #1890ff; }
+.filter-actions { flex-direction: row !important; align-items: flex-end; gap: 8px; }
+.batch-actions { display: flex; align-items: center; gap: 10px; }
+.selected-count { font-size: 13px; color: #666; }
+.view-toggle { display: flex; gap: 4px; }
+.view-toggle .btn.active { background: #1890ff; color: #fff; }
+
+.user-table { width: 100%; border-collapse: collapse; }
+.user-table th { background: #fafafa; font-weight: 600; color: #666; font-size: 13px; padding: 12px 16px; border-bottom: 1px solid #eee; text-align: left; white-space: nowrap; }
+.user-table td { padding: 12px 16px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+.user-table tr:hover { background: #f5f7fa; }
+.user-table .checkbox-cell { width: 40px; text-align: center; }
+.user-table .index-cell { width: 50px; text-align: center; color: #999; }
+.user-table .avatar-cell { width: 50px; }
+.user-table .info-cell { min-width: 150px; }
+.user-table .stat-cell { text-align: center; width: 80px; }
+.user-table .action-cell { width: 120px; }
+
+.avatar-wrapper { position: relative; display: inline-block; }
+.avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; overflow: hidden; cursor: pointer; }
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
+.avatar-preview { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.avatar-preview img { max-width: 80%; max-height: 80%; border-radius: 8px; }
+
+.user-info { display: flex; flex-direction: column; }
+.user-name { font-weight: 500; color: #333; }
+.user-id { font-size: 12px; color: #999; }
+
+.status-tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 12px; }
+.status-approved { background: #e6f7e6; color: #52c41a; }
+.status-rejected { background: #fff2f0; color: #ff4d4f; }
+
+.tree-view { padding: 16px; }
+.tree-node { margin-left: 20px; }
+.tree-header { display: flex; align-items: center; padding: 8px 12px; cursor: pointer; border-radius: 4px; }
+.tree-header:hover { background: #f5f5f5; }
+.tree-toggle { width: 20px; text-align: center; color: #999; }
+.tree-toggle.collapsed::before { content: '▶'; }
+.tree-toggle.expanded::before { content: '▼'; }
+.tree-label { font-weight: 500; }
+.tree-count { margin-left: 8px; font-size: 12px; color: #999; }
+.tree-children { margin-left: 20px; }
+.tree-children.hidden { display: none; }
+.tree-user { display: flex; align-items: center; padding: 8px 12px; border-bottom: 1px solid #f0f0f0; }
+.tree-user:hover { background: #f5f7fa; }
+
+.import-steps { display: flex; justify-content: center; margin-bottom: 24px; }
+.step { display: flex; align-items: center; padding: 8px 16px; color: #999; }
+.step.active { color: #1890ff; }
+.step.completed { color: #52c41a; }
+.step-num { width: 24px; height: 24px; border-radius: 50%; border: 2px solid currentColor; display: flex; align-items: center; justify-content: center; margin-right: 8px; font-size: 12px; }
+.step.active .step-num { background: #1890ff; color: #fff; border-color: #1890ff; }
+.step.completed .step-num { background: #52c41a; color: #fff; border-color: #52c41a; }
+
+.file-upload-area { border: 2px dashed #ddd; border-radius: 8px; padding: 40px; text-align: center; }
+.upload-placeholder { cursor: pointer; }
+.upload-icon { font-size: 48px; display: block; margin-bottom: 12px; }
+.upload-hint { font-size: 12px; color: #999; display: block; margin-top: 8px; }
+
+.preview-stats { margin-bottom: 16px; padding: 12px; background: #f5f5f5; border-radius: 4px; }
+.preview-stats span { margin-right: 16px; }
+.preview-stats .valid { color: #52c41a; }
+.preview-stats .invalid { color: #ff4d4f; }
+.preview-table-container { max-height: 300px; overflow: auto; }
+.preview-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.preview-table th, .preview-table td { padding: 8px 12px; border: 1px solid #eee; text-align: left; }
+.preview-table th { background: #f5f5f5; }
+.preview-table tr.invalid { background: #fff2f0; }
+
+.import-result { text-align: center; padding: 24px; }
+.result-icon { font-size: 64px; margin-bottom: 16px; }
+.result-text { font-size: 18px; font-weight: 500; margin-bottom: 24px; }
+.result-stats { display: flex; justify-content: center; gap: 32px; margin-bottom: 24px; }
+.result-stats .stat-item { text-align: center; }
+.result-stats .stat-label { display: block; font-size: 12px; color: #666; }
+.result-stats .stat-value { font-size: 24px; font-weight: 600; }
+.result-stats .success .stat-value { color: #52c41a; }
+.result-stats .warning .stat-value { color: #faad14; }
+.result-stats .error .stat-value { color: #ff4d4f; }
+
+.checkbox-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.checkbox-item { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.checkbox-item input { width: 16px; height: 16px; }
+
+.warning-box { display: flex; align-items: center; gap: 8px; padding: 12px; background: #fffbe6; border: 1px solid #ffe58f; border-radius: 4px; }
+.warning-icon { font-size: 20px; }
+
+.empty-state { text-align: center; padding: 60px 24px; color: #999; }
+.empty-state .icon { font-size: 64px; margin-bottom: 16px; opacity: 0.5; }
+
+.loading-state { text-align: center; padding: 60px 24px; color: #999; }
+.loading-state .loading-spinner { margin: 0 auto 16px; }
+
+@media (max-width: 768px) {
+  .filter-row { flex-direction: column; }
+  .filter-item { min-width: 100%; }
+  .checkbox-group { grid-template-columns: repeat(2, 1fr); }
+}
+
+.import-progress-container {
+  padding: 24px;
+  text-align: center;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.progress-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.progress-percent {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.progress-bar-wrapper {
+  width: 100%;
+  height: 12px;
+  background: var(--bg-color-component);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary-color), var(--primary-color-hover));
+  border-radius: 6px;
+  transition: width 0.3s ease;
+}
+
+.progress-detail {
+  display: flex;
+  justify-content: space-around;
+  gap: 16px;
+  font-size: 14px;
+  color: var(--text-color-secondary);
+}
+
+.progress-detail strong {
+  color: var(--text-color);
+  margin: 0 4px;
+}
+
+.pagination-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-color-split);
+  background: var(--bg-color-component);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.pagination-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 14px;
+  color: var(--text-color-secondary);
+}
+
+.pagination-info strong {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.pagination-size {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.pagination-size select {
+  padding: 4px 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.pagination-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.page-btn {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-color);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.page-btn:hover:not(:disabled) {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.page-btn.active {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: white;
+}
+
+.page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-ellipsis {
+  padding: 0 8px;
+  color: var(--text-color-secondary);
+}
+
+.pagination-jump {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.pagination-jump input {
+  width: 60px;
+  padding: 4px 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.tree-view {
+  padding: 16px;
+}
+
+.tree-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--bg-color-component);
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.tree-total {
+  font-size: 14px;
+  color: var(--text-color-secondary);
+}
+
+.tree-total strong {
+  color: var(--primary-color);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.tree-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.tree-node {
+  margin-bottom: 4px;
+}
+
+.tree-node[data-level="college"] > .tree-header {
+  background: linear-gradient(135deg, #e8f4fd 0%, #d1e9fc 100%);
+  border-left: 4px solid #1890ff;
+}
+
+.tree-node[data-level="grade"] > .tree-header {
+  background: linear-gradient(135deg, #f6ffed 0%, #e6f7e0 100%);
+  border-left: 4px solid #52c41a;
+  margin-left: 24px;
+}
+
+.tree-node[data-level="class"] > .tree-header {
+  background: linear-gradient(135deg, #fff7e6 0%, #ffefd1 100%);
+  border-left: 4px solid #fa8c16;
+  margin-left: 48px;
+}
+
+.tree-header {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.tree-header:hover {
+  filter: brightness(0.95);
+}
+
+.tree-toggle {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: var(--text-color-secondary);
+  margin-right: 8px;
+  transition: transform 0.2s;
+}
+
+.tree-toggle.collapsed {
+  transform: rotate(0deg);
+}
+
+.tree-toggle.expanded {
+  transform: rotate(0deg);
+}
+
+.tree-icon {
+  margin-right: 8px;
+  font-size: 16px;
+}
+
+.tree-label {
+  font-weight: 500;
+  color: var(--text-color);
+  flex: 1;
+}
+
+.tree-count {
+  font-size: 13px;
+  color: var(--text-color-secondary);
+  background: rgba(0, 0, 0, 0.05);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.tree-children {
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.tree-children.hidden {
+  display: none;
+}
+
+.tree-user {
+  margin-left: 72px;
+}
+
+.tree-user-content {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  background: var(--bg-color);
+  border: 1px solid var(--border-color-split);
+  border-radius: 6px;
+  margin-bottom: 4px;
+  transition: all 0.2s;
+}
+
+.tree-user-content:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.1);
+}
+
+.tree-user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-color-hover) 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 500;
+  margin-right: 12px;
+  overflow: hidden;
+}
+
+.tree-user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tree-user-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tree-user-name {
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.tree-user-detail {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--text-color-secondary);
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+}
+
+.view-toggle {
+  display: flex;
+  gap: 4px;
+  background: var(--bg-color-component);
+  padding: 4px;
+  border-radius: 6px;
+}
+
+.view-toggle .btn {
+  padding: 6px 16px;
+  border: none;
+  background: transparent;
+  color: var(--text-color-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.view-toggle .btn:hover {
+  color: var(--text-color);
+}
+
+.view-toggle .btn.active {
+  background: var(--primary-color);
+  color: white;
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+(function() {
+  let currentPage = 1;
+  let pageSize = 20;
+  let currentView = 'table';
+  let selectedUsers = new Set();
+  let importData = [];
+  let importStep = 1;
+  let currentUserDetail = null;
+  let savedFilters = {};
+  let lastTotal = 0;
+  
+  window.usersPage = {
+    init: function() {
+      this.loadColleges();
+      this.loadGrades();
+      this.loadData();
+      document.getElementById('viewTable').classList.add('active');
+    },
+    
+    toggleAdvancedFilter: function() {
+      const body = document.getElementById('advancedFilterBody');
+      const icon = document.getElementById('filterToggleIcon');
+      body.classList.toggle('hidden');
+      icon.classList.toggle('collapsed');
+    },
+    
+    loadColleges: async function() {
+      try {
+        const res = await api.user.getColleges();
+        if (res.code === 0 && res.data) {
+          const select = document.getElementById('filterCollege');
+          res.data.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.college;
+            option.textContent = item.college;
+            select.appendChild(option);
+          });
+        }
+      } catch (err) {
+        console.error('加载学院失败:', err);
+      }
+    },
+    
+    loadGrades: async function() {
+      try {
+        const res = await api.user.getGrades();
+        if (res.code === 0 && res.data) {
+          const select = document.getElementById('filterGrade');
+          res.data.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.grade;
+            option.textContent = item.grade;
+            select.appendChild(option);
+          });
+        }
+      } catch (err) {
+        console.error('加载年级失败:', err);
+      }
+    },
+    
+    loadClassesByCollege: async function() {
+      const college = document.getElementById('filterCollege').value;
+      const classSelect = document.getElementById('filterClass');
+      classSelect.innerHTML = '<option value="">全部班级</option>';
+      
+      if (!college) return;
+      
+      try {
+        const res = await api.user.getClasses({ college });
+        if (res.code === 0 && res.data) {
+          res.data.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.class_name;
+            option.textContent = item.class_name;
+            classSelect.appendChild(option);
+          });
+        }
+      } catch (err) {
+        console.error('加载班级失败:', err);
+      }
+    },
+    
+    resetFilter: function() {
+      document.getElementById('searchKeyword').value = '';
+      document.getElementById('filterCollege').value = '';
+      document.getElementById('filterClass').innerHTML = '<option value="">全部班级</option>';
+      document.getElementById('filterGrade').value = '';
+      document.getElementById('filterCounselor').value = '';
+      document.getElementById('filterStatus').value = '';
+      document.getElementById('filterStartDate').value = '';
+      document.getElementById('filterEndDate').value = '';
+      this.loadData();
+    },
+    
+    saveFilter: function() {
+      const filterName = prompt('请输入筛选条件名称:');
+      if (!filterName) return;
+      
+      savedFilters[filterName] = {
+        keyword: document.getElementById('searchKeyword').value,
+        college: document.getElementById('filterCollege').value,
+        class_name: document.getElementById('filterClass').value,
+        grade: document.getElementById('filterGrade').value,
+        counselor: document.getElementById('filterCounselor').value,
+        status: document.getElementById('filterStatus').value,
+        startDate: document.getElementById('filterStartDate').value,
+        endDate: document.getElementById('filterEndDate').value
+      };
+      
+      api.showSuccess('筛选条件已保存');
+    },
+    
+    loadData: async function() {
+      const container = document.getElementById('userListContainer');
+      container.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div><p>加载中...</p></div>';
+      
+      const params = {
+        page: currentPage,
+        pageSize,
+        keyword: document.getElementById('searchKeyword').value.trim(),
+        college: document.getElementById('filterCollege').value,
+        class_name: document.getElementById('filterClass').value,
+        grade: document.getElementById('filterGrade').value,
+        counselor: document.getElementById('filterCounselor').value,
+        status: document.getElementById('filterStatus').value !== '' ? parseInt(document.getElementById('filterStatus').value) : undefined,
+        startDate: document.getElementById('filterStartDate').value,
+        endDate: document.getElementById('filterEndDate').value
+      };
+      
+      try {
+        const res = await api.user.getList(params);
+        if (currentView === 'table') {
+          this.renderTableList(res);
+        } else {
+          this.renderTreeList(res);
+        }
+      } catch (err) {
+        console.error('加载失败:', err);
+        container.innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><p>加载失败，请重试</p></div>';
+      }
+    },
+    
+    renderTableList: function(res) {
+      const container = document.getElementById('userListContainer');
+      
+      if (res.code !== 0 || !res.data || !res.data.list || res.data.list.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="icon">👥</div><p>暂无用户数据</p></div>';
+        return;
+      }
+      
+      const startIndex = (currentPage - 1) * pageSize;
+      let html = `
+        <table class="user-table">
+          <thead>
+            <tr>
+              <th class="checkbox-cell"><input type="checkbox" onchange="usersPage.toggleSelectAll(this.checked)"></th>
+              <th class="index-cell">序号</th>
+              <th class="avatar-cell">头像</th>
+              <th class="info-cell">用户信息</th>
+              <th>学号</th>
+              <th>学院</th>
+              <th>班级</th>
+              <th>辅导员</th>
+              <th class="stat-cell">点歌</th>
+              <th class="stat-cell">祝福</th>
+              <th>状态</th>
+              <th>注册时间</th>
+              <th class="action-cell">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+      
+      res.data.list.forEach((item, index) => {
+        const statusClass = item.status === 0 ? 'status-approved' : 'status-rejected';
+        const statusText = item.status === 0 ? '正常' : '已禁用';
+        const avatar = (item.nickname || '匿').charAt(0);
+        const isSelected = selectedUsers.has(item.id);
+        
+        html += `
+          <tr>
+            <td class="checkbox-cell"><input type="checkbox" ${isSelected ? 'checked' : ''} onchange="usersPage.toggleSelect(${item.id}, this.checked)"></td>
+            <td class="index-cell">${startIndex + index + 1}</td>
+            <td class="avatar-cell">
+              <div class="avatar-wrapper">
+                <div class="avatar" onclick="usersPage.previewAvatar('${item.avatar_url || ''}', '${avatar}')">
+                  ${item.avatar_url ? `<img src="${item.avatar_url}" onerror="this.style.display='none';this.parentElement.innerHTML='${avatar}'">` : avatar}
+                </div>
+              </div>
+            </td>
+            <td class="info-cell">
+              <div class="user-info">
+                <span class="user-name">${item.nickname || item.real_name || '未知用户'}</span>
+                <span class="user-id">ID: ${item.id} | ${item.wechat_name || ''}</span>
+              </div>
+            </td>
+            <td>${item.student_id || '-'}</td>
+            <td>${item.college || '-'}</td>
+            <td>${item.class_name || '-'}</td>
+            <td>${item.counselor || '-'}</td>
+            <td class="stat-cell">${item.request_count || 0}</td>
+            <td class="stat-cell">${item.blessing_count || 0}</td>
+            <td><span class="status-tag ${statusClass}">${statusText}</span></td>
+            <td>${this.formatTime(item.create_time)}</td>
+            <td>
+              <div class="action-btns">
+                <button class="btn btn-sm btn-secondary" onclick="usersPage.showUserDetail(${item.id})">详情</button>
+                <button class="btn btn-sm ${item.status === 0 ? 'btn-danger' : 'btn-success'}" onclick="usersPage.toggleStatus(${item.id}, ${item.status})">
+                  ${item.status === 0 ? '禁用' : '启用'}
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+      
+      html += '</tbody></table>';
+      
+      this.lastTotal = res.data.total;
+      
+      if (res.data.total > pageSize) {
+        html += this.renderPagination(res.data.total);
+      }
+      
+      container.innerHTML = html;
+      this.updateBatchActions();
+    },
+    
+    renderTreeList: function(res) {
+      const container = document.getElementById('userListContainer');
+      
+      if (res.code !== 0 || !res.data || !res.data.list || res.data.list.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="icon">👥</div><p>暂无用户数据</p></div>';
+        return;
+      }
+      
+      this.lastTotal = res.data.total;
+      const tree = this.buildTree(res.data.list);
+      let html = '<div class="tree-view">';
+      html += '<div class="tree-header-bar">';
+      html += `<span class="tree-total">共 <strong>${res.data.total}</strong> 名用户</span>`;
+      html += '<div class="tree-actions">';
+      html += '<button class="btn btn-sm btn-secondary" onclick="usersPage.expandAllTree()">全部展开</button>';
+      html += '<button class="btn btn-sm btn-secondary" onclick="usersPage.collapseAllTree()">全部折叠</button>';
+      html += '</div>';
+      html += '</div>';
+      html += this.renderTreeNode(tree, 0);
+      html += '</div>';
+      container.innerHTML = html;
+    },
+    
+    buildTree: function(list) {
+      const tree = {};
+      list.forEach(item => {
+        const college = item.college || '未分配学院';
+        const grade = item.grade || '未分配年级';
+        const className = item.class_name || '未分配班级';
+        
+        if (!tree[college]) tree[college] = { _count: 0, _children: {} };
+        if (!tree[college]._children[grade]) tree[college]._children[grade] = { _count: 0, _children: {} };
+        if (!tree[college]._children[grade]._children[className]) tree[college]._children[grade]._children[className] = { _count: 0, _children: [] };
+        
+        tree[college]._count++;
+        tree[college]._children[grade]._count++;
+        tree[college]._children[grade]._children[className]._count++;
+        tree[college]._children[grade]._children[className]._children.push(item);
+      });
+      return tree;
+    },
+    
+    renderTreeNode: function(node, level) {
+      let html = '';
+      
+      if (level === 0) {
+        Object.keys(node).sort().forEach(college => {
+          if (college === '_count') return;
+          const collegeData = node[college];
+          html += `
+            <div class="tree-node" data-level="college">
+              <div class="tree-header" onclick="usersPage.toggleTreeNode(this)">
+                <span class="tree-toggle expanded">▼</span>
+                <span class="tree-icon">🏫</span>
+                <span class="tree-label">${college}</span>
+                <span class="tree-count">${collegeData._count}人</span>
+              </div>
+              <div class="tree-children">
+                ${this.renderTreeNode(collegeData._children, 1)}
+              </div>
+            </div>
+          `;
+        });
+      } else if (level === 1) {
+        Object.keys(node).sort().forEach(grade => {
+          if (grade === '_count') return;
+          const gradeData = node[grade];
+          html += `
+            <div class="tree-node" data-level="grade">
+              <div class="tree-header" onclick="usersPage.toggleTreeNode(this)">
+                <span class="tree-toggle expanded">▼</span>
+                <span class="tree-icon">📅</span>
+                <span class="tree-label">${grade}</span>
+                <span class="tree-count">${gradeData._count}人</span>
+              </div>
+              <div class="tree-children">
+                ${this.renderTreeNode(gradeData._children, 2)}
+              </div>
+            </div>
+          `;
+        });
+      } else if (level === 2) {
+        Object.keys(node).sort().forEach(className => {
+          if (className === '_count') return;
+          const classData = node[className];
+          html += `
+            <div class="tree-node" data-level="class">
+              <div class="tree-header" onclick="usersPage.toggleTreeNode(this)">
+                <span class="tree-toggle expanded">▼</span>
+                <span class="tree-icon">👥</span>
+                <span class="tree-label">${className}</span>
+                <span class="tree-count">${classData._count}人</span>
+              </div>
+              <div class="tree-children">
+                ${classData._children.map(user => this.renderUserNode(user)).join('')}
+              </div>
+            </div>
+          `;
+        });
+      }
+      
+      return html;
+    },
+    
+    renderUserNode: function(user) {
+      const statusClass = user.status === 0 ? 'status-approved' : 'status-rejected';
+      const statusText = user.status === 0 ? '正常' : '禁用';
+      const avatar = user.avatar_url 
+        ? `<img src="${user.avatar_url}" onerror="this.style.display='none';this.parentElement.textContent='${(user.nickname || '匿').charAt(0)}'">` 
+        : (user.nickname || '匿').charAt(0);
+      
+      return `
+        <div class="tree-node tree-user" data-level="user">
+          <div class="tree-user-content">
+            <div class="tree-user-avatar">${avatar}</div>
+            <div class="tree-user-info">
+              <span class="tree-user-name">${user.nickname || user.real_name || '未知用户'}</span>
+              <span class="tree-user-detail">
+                <span class="detail-item">学号: ${user.student_id || '-'}</span>
+                <span class="detail-item">点歌: ${user.request_count || 0}</span>
+                <span class="detail-item">祝福: ${user.blessing_count || 0}</span>
+              </span>
+            </div>
+            <span class="status-tag ${statusClass}">${statusText}</span>
+            <button class="btn btn-sm btn-secondary" onclick="usersPage.showUserDetail(${user.id})">详情</button>
+          </div>
+        </div>
+      `;
+    },
+    
+    toggleTreeNode: function(header) {
+      const toggle = header.querySelector('.tree-toggle');
+      const children = header.nextElementSibling;
+      if (toggle.classList.contains('expanded')) {
+        toggle.classList.remove('expanded');
+        toggle.classList.add('collapsed');
+        toggle.textContent = '▶';
+        children.classList.add('hidden');
+      } else {
+        toggle.classList.remove('collapsed');
+        toggle.classList.add('expanded');
+        toggle.textContent = '▼';
+        children.classList.remove('hidden');
+      }
+    },
+    
+    expandAllTree: function() {
+      document.querySelectorAll('.tree-toggle.collapsed').forEach(toggle => {
+        toggle.classList.remove('collapsed');
+        toggle.classList.add('expanded');
+        toggle.textContent = '▼';
+        const children = toggle.closest('.tree-header').nextElementSibling;
+        if (children) children.classList.remove('hidden');
+      });
+    },
+    
+    collapseAllTree: function() {
+      document.querySelectorAll('.tree-toggle.expanded').forEach(toggle => {
+        toggle.classList.remove('expanded');
+        toggle.classList.add('collapsed');
+        toggle.textContent = '▶';
+        const children = toggle.closest('.tree-header').nextElementSibling;
+        if (children) children.classList.add('hidden');
+      });
+    },
+    
+    setView: function(view) {
+      currentView = view;
+      document.getElementById('viewTable').classList.toggle('active', view === 'table');
+      document.getElementById('viewTree').classList.toggle('active', view === 'tree');
+      
+      if (view === 'tree') {
+        currentPage = 1;
+        pageSize = 1000;
+      } else {
+        pageSize = 20;
+      }
+      
+      this.loadData();
+    },
+    
+    previewAvatar: function(url, fallback) {
+      if (!url || url === '') return;
+      
+      const preview = document.createElement('div');
+      preview.className = 'avatar-preview';
+      preview.innerHTML = `<img src="${url}" onerror="this.parentElement.remove()">`;
+      preview.onclick = () => preview.remove();
+      document.body.appendChild(preview);
+    },
+    
+    toggleSelectAll: function(checked) {
+      const checkboxes = document.querySelectorAll('.user-table tbody input[type="checkbox"]');
+      checkboxes.forEach(cb => {
+        const id = parseInt(cb.closest('tr').querySelector('[onclick*="showUserDetail"]').getAttribute('onclick').match(/\d+/)[0]);
+        if (checked) {
+          selectedUsers.add(id);
+        } else {
+          selectedUsers.delete(id);
+        }
+        cb.checked = checked;
+      });
+      this.updateBatchActions();
+    },
+    
+    toggleSelect: function(id, checked) {
+      if (checked) {
+        selectedUsers.add(id);
+      } else {
+        selectedUsers.delete(id);
+      }
+      this.updateBatchActions();
+    },
+    
+    selectAll: function() {
+      document.querySelectorAll('.user-table thead input[type="checkbox"]')[0].checked = true;
+      this.toggleSelectAll(true);
+    },
+    
+    clearSelection: function() {
+      selectedUsers.clear();
+      document.querySelectorAll('.user-table input[type="checkbox"]').forEach(cb => cb.checked = false);
+      this.updateBatchActions();
+    },
+    
+    updateBatchActions: function() {
+      const batchActions = document.getElementById('batchActions');
+      const selectedCount = document.getElementById('selectedCount');
+      
+      if (selectedUsers.size > 0) {
+        batchActions.style.display = 'flex';
+        selectedCount.textContent = selectedUsers.size;
+      } else {
+        batchActions.style.display = 'none';
+      }
+    },
+    
+    renderPagination: function(total) {
+      const totalPages = Math.ceil(total / pageSize);
+      const pageSizes = [10, 20, 50, 100];
+      
+      let html = '<div class="pagination-container">';
+      html += '<div class="pagination-info">';
+      html += `<span>共 <strong>${total}</strong> 条记录</span>`;
+      html += `<span>第 ${(currentPage - 1) * pageSize + 1}-${Math.min(currentPage * pageSize, total)} 条</span>`;
+      html += '</div>';
+      
+      html += '<div class="pagination-size">';
+      html += '<span>每页显示:</span>';
+      html += '<select onchange="usersPage.changePageSize(this.value)">';
+      pageSizes.forEach(size => {
+        html += `<option value="${size}" ${pageSize === size ? 'selected' : ''}>${size}条/页</option>`;
+      });
+      html += '</select>';
+      html += '</div>';
+      
+      html += '<div class="pagination-nav">';
+      html += `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="usersPage.goToPage(1)" title="首页">««</button>`;
+      html += `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="usersPage.goToPage(${currentPage - 1})" title="上一页">«</button>`;
+      
+      let startPage = Math.max(1, currentPage - 2);
+      let endPage = Math.min(totalPages, currentPage + 2);
+      
+      if (startPage > 1) {
+        html += '<span class="page-ellipsis">...</span>';
+      }
+      
+      for (let i = startPage; i <= endPage; i++) {
+        html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="usersPage.goToPage(${i})">${i}</button>`;
+      }
+      
+      if (endPage < totalPages) {
+        html += '<span class="page-ellipsis">...</span>';
+      }
+      
+      html += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="usersPage.goToPage(${currentPage + 1})" title="下一页">»</button>`;
+      html += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="usersPage.goToPage(${totalPages})" title="末页">»»</button>`;
+      html += '</div>';
+      
+      html += '<div class="pagination-jump">';
+      html += '<span>跳转至</span>';
+      html += `<input type="number" min="1" max="${totalPages}" value="${currentPage}" onkeypress="if(event.key===\'Enter\')usersPage.jumpToPage(this.value)">`;
+      html += '<span>页</span>';
+      html += '</div>';
+      
+      html += '</div>';
+      return html;
+    },
+    
+    changePageSize: function(newSize) {
+      pageSize = parseInt(newSize);
+      currentPage = 1;
+      this.loadData();
+    },
+    
+    jumpToPage: function(page) {
+      const totalPages = Math.ceil(this.lastTotal / pageSize);
+      const targetPage = parseInt(page);
+      if (targetPage >= 1 && targetPage <= totalPages) {
+        this.goToPage(targetPage);
+      }
+    },
+    
+    goToPage: function(page) {
+      currentPage = page;
+      this.loadData();
+    },
+    
+    showUserDetail: async function(id) {
+      try {
+        const res = await api.user.getDetail(id);
+        if (res.code === 0 && res.data) {
+          currentUserDetail = res.data;
+          const item = res.data;
+          const statusText = item.status === 0 ? '正常' : '已禁用';
+          
+          document.getElementById('userDetailContent').innerHTML = `
+            <div class="detail-grid">
+              <div class="detail-item"><span class="label">用户ID</span><span class="value">${item.id}</span></div>
+              <div class="detail-item"><span class="label">学号</span><span class="value">${item.student_id || '-'}</span></div>
+              <div class="detail-item"><span class="label">姓名</span><span class="value">${item.real_name || '-'}</span></div>
+              <div class="detail-item"><span class="label">昵称</span><span class="value">${item.nickname || '-'}</span></div>
+              <div class="detail-item"><span class="label">学院</span><span class="value">${item.college || '-'}</span></div>
+              <div class="detail-item"><span class="label">专业</span><span class="value">${item.major || '-'}</span></div>
+              <div class="detail-item"><span class="label">年级</span><span class="value">${item.grade || '-'}</span></div>
+              <div class="detail-item"><span class="label">班级</span><span class="value">${item.class_name || '-'}</span></div>
+              <div class="detail-item"><span class="label">辅导员</span><span class="value">${item.counselor || '-'}</span></div>
+              <div class="detail-item"><span class="label">手机号</span><span class="value">${item.phone || '-'}</span></div>
+              <div class="detail-item"><span class="label">微信名称</span><span class="value">${item.wechat_name || '-'}</span></div>
+              <div class="detail-item"><span class="label">微信账号</span><span class="value">${item.wechat_account || '-'}</span></div>
+              <div class="detail-item"><span class="label">点歌次数</span><span class="value">${item.request_count || 0} 次</span></div>
+              <div class="detail-item"><span class="label">祝福次数</span><span class="value">${item.blessing_count || 0} 条</span></div>
+              <div class="detail-item"><span class="label">状态</span><span class="value">${statusText}</span></div>
+              <div class="detail-item"><span class="label">注册时间</span><span class="value">${this.formatTime(item.create_time)}</span></div>
+            </div>
+          `;
+          
+          document.getElementById('userDetailModal').style.display = 'flex';
+        } else {
+          api.showError(res.msg || '获取详情失败');
+        }
+      } catch (err) {
+        console.error('获取详情失败:', err);
+        api.showError('获取详情失败');
+      }
+    },
+    
+    closeUserDetailModal: function() {
+      document.getElementById('userDetailModal').style.display = 'none';
+      currentUserDetail = null;
+    },
+    
+    editCurrentUser: function() {
+      if (!currentUserDetail) {
+        api.showError('未找到用户信息');
+        return;
+      }
+      
+      const userData = { ...currentUserDetail };
+      this.closeUserDetailModal();
+      this.showEditModal(userData);
+    },
+    
+    showEditModal: function(user) {
+      document.getElementById('editUserId').value = user.id;
+      document.getElementById('editStudentId').value = user.student_id || '';
+      document.getElementById('editUserRealName').value = user.real_name || '';
+      document.getElementById('editNickname').value = user.nickname || '';
+      document.getElementById('editCollege').value = user.college || '';
+      document.getElementById('editMajor').value = user.major || '';
+      document.getElementById('editGrade').value = user.grade || '';
+      document.getElementById('editClassName').value = user.class_name || '';
+      document.getElementById('editCounselor').value = user.counselor || '';
+      document.getElementById('editPhone').value = user.phone || '';
+      document.getElementById('editWechatName').value = user.wechat_name || '';
+      document.getElementById('editWechatAccount').value = user.wechat_account || '';
+      
+      document.getElementById('editModal').style.display = 'flex';
+    },
+    
+    closeEditModal: function() {
+      document.getElementById('editModal').style.display = 'none';
+    },
+    
+    saveEdit: async function() {
+      const id = document.getElementById('editUserId').value;
+      const data = {
+        student_id: document.getElementById('editStudentId').value.trim() || null,
+        real_name: document.getElementById('editUserRealName').value.trim() || null,
+        nickname: document.getElementById('editNickname').value.trim() || null,
+        college: document.getElementById('editCollege').value.trim() || null,
+        major: document.getElementById('editMajor').value.trim() || null,
+        grade: document.getElementById('editGrade').value.trim() || null,
+        class_name: document.getElementById('editClassName').value.trim() || null,
+        counselor: document.getElementById('editCounselor').value.trim() || null,
+        phone: document.getElementById('editPhone').value.trim() || null,
+        wechat_name: document.getElementById('editWechatName').value.trim() || null,
+        wechat_account: document.getElementById('editWechatAccount').value.trim() || null
+      };
+      
+      try {
+        const res = await api.user.update(id, data);
+        if (res.code === 0) {
+          api.showSuccess('保存成功');
+          this.closeEditModal();
+          this.loadData();
+        } else {
+          api.showError(res.msg || '保存失败');
+        }
+      } catch (err) {
+        console.error('保存失败:', err);
+        api.showError('保存失败');
+      }
+    },
+    
+    toggleStatus: async function(id, currentStatus) {
+      const newStatus = currentStatus === 0 ? 1 : 0;
+      const action = newStatus === 0 ? '启用' : '禁用';
+      
+      if (!await app.confirm(`确定要${action}这个用户吗？`)) return;
+      
+      try {
+        const res = await api.user.updateStatus(id, { status: newStatus });
+        if (res.code === 0) {
+          api.showSuccess(`${action}成功`);
+          this.loadData();
+        } else {
+          api.showError(res.msg || `${action}失败`);
+        }
+      } catch (err) {
+        console.error(`${action}失败:`, err);
+        api.showError(`${action}失败`);
+      }
+    },
+    
+    showImportModal: function() {
+      importStep = 1;
+      importData = [];
+      this.updateImportStep();
+      document.getElementById('importModal').style.display = 'flex';
+      const nextBtn = document.getElementById('importNextBtn');
+      nextBtn.textContent = '下一步';
+      nextBtn.disabled = false;
+      nextBtn.onclick = () => {
+        this.nextImportStep();
+      };
+    },
+    
+    closeImportModal: function() {
+      document.getElementById('importModal').style.display = 'none';
+    },
+    
+    handleFileSelect: function(input) {
+      const file = input.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          importData = XLSX.utils.sheet_to_json(firstSheet);
+          
+          const nextBtn = document.getElementById('importNextBtn');
+          nextBtn.disabled = false;
+          nextBtn.onclick = () => {
+            this.nextImportStep();
+          };
+          document.querySelector('.upload-placeholder').innerHTML = `
+            <span class="upload-icon">📄</span>
+            <span>${file.name}</span>
+            <span class="upload-hint">共 ${importData.length} 条数据</span>
+          `;
+        } catch (err) {
+          console.error('解析文件失败:', err);
+          api.showError('文件解析失败，请检查文件格式');
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    },
+    
+    downloadTemplate: function() {
+      const template = [
+        { 学号: '2024001', 姓名: '张三', 昵称: '小张', 学院: '计算机学院', 专业: '软件工程', 年级: '2024', 班级: '软工1班', 辅导员: '李老师', 手机号: '13800138000', 微信名称: '张三', 微信账号: 'zhangsan_wx' }
+      ];
+      
+      const ws = XLSX.utils.json_to_sheet(template);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, '用户导入模板');
+      XLSX.writeFile(wb, '用户导入模板.xlsx');
+    },
+    
+    nextImportStep: async function() {
+      if (importStep === 1) {
+        this.showImportPreview();
+      } else if (importStep === 2) {
+        await this.executeImport();
+      }
+    },
+    
+    showImportPreview: function() {
+      importStep = 2;
+      this.updateImportStep();
+      
+      let validCount = 0;
+      let invalidCount = 0;
+      
+      importData.forEach(item => {
+        if (item['学号'] && item['姓名']) {
+          validCount++;
+          item._valid = true;
+        } else {
+          invalidCount++;
+          item._valid = false;
+        }
+      });
+      
+      document.getElementById('previewTotal').textContent = importData.length;
+      document.getElementById('previewValid').textContent = validCount;
+      document.getElementById('previewInvalid').textContent = invalidCount;
+      
+      let tableHtml = '<thead><tr><th>行号</th><th>学号</th><th>姓名</th><th>学院</th><th>班级</th><th>状态</th></tr></thead><tbody>';
+      importData.forEach((item, index) => {
+        tableHtml += `
+          <tr class="${item._valid ? '' : 'invalid'}">
+            <td>${index + 2}</td>
+            <td>${item['学号'] || '-'}</td>
+            <td>${item['姓名'] || '-'}</td>
+            <td>${item['学院'] || '-'}</td>
+            <td>${item['班级'] || '-'}</td>
+            <td>${item._valid ? '✅ 有效' : '❌ 缺少必填项'}</td>
+          </tr>
+        `;
+      });
+      tableHtml += '</tbody>';
+      document.getElementById('previewTable').innerHTML = tableHtml;
+      
+      const nextBtn = document.getElementById('importNextBtn');
+      nextBtn.textContent = '开始导入';
+      nextBtn.disabled = false;
+      nextBtn.onclick = () => {
+        this.executeImport();
+      };
+    },
+    
+    executeImport: async function() {
+      importStep = 3;
+      this.updateImportStep();
+      
+      const nextBtn = document.getElementById('importNextBtn');
+      nextBtn.disabled = true;
+      nextBtn.textContent = '导入中...';
+      
+      const mode = document.getElementById('importMode').value;
+      const validUsers = importData.filter(item => item._valid);
+      const total = validUsers.length;
+      
+      document.getElementById('importTotal').textContent = total;
+      
+      if (total === 0) {
+        document.getElementById('importSuccess').textContent = 0;
+        document.getElementById('importUpdated').textContent = 0;
+        document.getElementById('importFailed').textContent = importData.length;
+        importStep = 4;
+        this.updateImportStep();
+        nextBtn.textContent = '完成';
+        nextBtn.disabled = false;
+        nextBtn.onclick = () => {
+          this.closeImportModal();
+        };
+        return;
+      }
+      
+      let successCount = 0;
+      let updateCount = 0;
+      let failCount = 0;
+      const batchSize = 10;
+      
+      for (let i = 0; i < validUsers.length; i += batchSize) {
+        const batch = validUsers.slice(i, i + batchSize);
+        const users = batch.map(item => {
+          const cleanStr = (val) => {
+            if (val === undefined || val === null || val === '') return null;
+            return String(val).trim() || null;
+          };
+          
+          return {
+            student_id: cleanStr(item['学号']),
+            real_name: cleanStr(item['姓名']),
+            nickname: cleanStr(item['昵称']) || cleanStr(item['姓名']) || cleanStr(item['学号']),
+            college: cleanStr(item['学院']),
+            major: cleanStr(item['专业']),
+            grade: cleanStr(item['年级']),
+            class_name: cleanStr(item['班级']),
+            counselor: cleanStr(item['辅导员']),
+            phone: cleanStr(item['手机号']),
+            wechat_name: cleanStr(item['微信名称']),
+            wechat_account: cleanStr(item['微信账号']),
+            password: '123456'
+          };
+        });
+        
+        try {
+          const res = await api.user.importUsers({ users, mode });
+          
+          if (res.code === 0) {
+            const result = res.data || {};
+            successCount += result.successCount || 0;
+            updateCount += result.updateCount || 0;
+            failCount += result.failCount || 0;
+          } else {
+            failCount += users.length;
+          }
+        } catch (err) {
+          console.error('批量导入失败:', err);
+          failCount += users.length;
+        }
+        
+        const processed = Math.min(i + batchSize, validUsers.length);
+        const percent = Math.round((processed / total) * 100);
+        
+        document.getElementById('importProcessed').textContent = processed;
+        document.getElementById('importCurrentSuccess').textContent = successCount;
+        document.getElementById('importCurrentUpdated').textContent = updateCount;
+        document.getElementById('importCurrentFailed').textContent = failCount;
+        document.getElementById('importProgressPercent').textContent = percent + '%';
+        document.getElementById('importProgressBar').style.width = percent + '%';
+      }
+      
+      importStep = 4;
+      this.updateImportStep();
+      
+      document.getElementById('importSuccess').textContent = successCount;
+      document.getElementById('importUpdated').textContent = updateCount;
+      document.getElementById('importFailed').textContent = failCount;
+      
+      nextBtn.textContent = '完成';
+      nextBtn.disabled = false;
+      nextBtn.onclick = () => {
+        this.closeImportModal();
+        this.loadData();
+      };
+    },
+    
+    updateImportStep: function() {
+      document.querySelectorAll('.import-steps .step').forEach((step, index) => {
+        step.classList.remove('active', 'completed');
+        if (index + 1 < importStep) {
+          step.classList.add('completed');
+        } else if (index + 1 === importStep) {
+          step.classList.add('active');
+        }
+      });
+      
+      document.getElementById('importStep1').style.display = importStep === 1 ? 'block' : 'none';
+      document.getElementById('importStep2').style.display = importStep === 2 ? 'block' : 'none';
+      document.getElementById('importStep3').style.display = importStep === 3 ? 'block' : 'none';
+      document.getElementById('importStep4').style.display = importStep === 4 ? 'block' : 'none';
+    },
+    
+    showExportModal: function() {
+      document.getElementById('exportModal').style.display = 'flex';
+    },
+    
+    closeExportModal: function() {
+      document.getElementById('exportModal').style.display = 'none';
+    },
+    
+    executeExport: async function() {
+      const format = document.getElementById('exportFormat').value;
+      const range = document.getElementById('exportRange').value;
+      const fields = Array.from(document.querySelectorAll('.checkbox-group input:checked')).map(cb => cb.value);
+      
+      let users = [];
+      
+      if (range === 'selected') {
+        for (const id of selectedUsers) {
+          const res = await api.user.getDetail(id);
+          if (res.code === 0) users.push(res.data);
+        }
+      } else {
+        const params = range === 'current' ? {
+          keyword: document.getElementById('searchKeyword').value.trim(),
+          college: document.getElementById('filterCollege').value,
+          class_name: document.getElementById('filterClass').value,
+          grade: document.getElementById('filterGrade').value,
+          counselor: document.getElementById('filterCounselor').value,
+          status: document.getElementById('filterStatus').value !== '' ? parseInt(document.getElementById('filterStatus').value) : undefined
+        } : {};
+        
+        const res = await api.user.getList({ ...params, page: 1, pageSize: 10000 });
+        if (res.code === 0) users = res.data.list;
+      }
+      
+      const exportData = users.map(user => {
+        const row = {};
+        fields.forEach(field => {
+          const fieldNames = {
+            id: '用户ID', student_id: '学号', real_name: '姓名', nickname: '昵称',
+            college: '学院', major: '专业', grade: '年级', class_name: '班级',
+            counselor: '辅导员', phone: '手机号', wechat_name: '微信名称',
+            wechat_account: '微信账号', request_count: '点歌次数',
+            blessing_count: '祝福次数', status: '状态', create_time: '注册时间'
+          };
+          row[fieldNames[field] || field] = field === 'status' ? (user[field] === 0 ? '正常' : '禁用') : user[field];
+        });
+        return row;
+      });
+      
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, '用户数据');
+      
+      if (format === 'csv') {
+        XLSX.writeFile(wb, '用户数据.csv', { bookType: 'csv' });
+      } else {
+        XLSX.writeFile(wb, '用户数据.xlsx');
+      }
+      
+      this.closeExportModal();
+      api.showSuccess('导出成功');
+    },
+    
+    showBatchEditModal: function() {
+      document.getElementById('batchEditModal').style.display = 'flex';
+    },
+    
+    closeBatchEditModal: function() {
+      document.getElementById('batchEditModal').style.display = 'none';
+    },
+    
+    updateBatchEditValue: function() {
+      const field = document.getElementById('batchEditField').value;
+      const valueGroup = document.getElementById('batchEditValueGroup');
+      
+      if (field) {
+        valueGroup.style.display = 'block';
+        const labels = { college: '学院', major: '专业', grade: '年级', class_name: '班级', counselor: '辅导员' };
+        document.getElementById('batchEditValueLabel').textContent = labels[field] || '新值';
+      } else {
+        valueGroup.style.display = 'none';
+      }
+    },
+    
+    executeBatchEdit: async function() {
+      const field = document.getElementById('batchEditField').value;
+      const value = document.getElementById('batchEditValue').value.trim();
+      
+      if (!field || !value) {
+        api.showError('请选择字段并输入新值');
+        return;
+      }
+      
+      if (selectedUsers.size === 0) {
+        api.showError('请先选择要修改的用户');
+        return;
+      }
+      
+      if (!await app.confirm(`确定要将选中的 ${selectedUsers.size} 个用户的"${field}"修改为"${value}"吗？`)) return;
+      
+      try {
+        const res = await api.user.batchUpdateUsers({
+          ids: Array.from(selectedUsers),
+          field,
+          value
+        });
+        
+        if (res.code === 0) {
+          api.showSuccess(`成功修改 ${res.data.updatedCount} 个用户`);
+          this.closeBatchEditModal();
+          this.loadData();
+        } else {
+          api.showError(res.msg || '修改失败');
+        }
+      } catch (err) {
+        console.error('批量修改失败:', err);
+        api.showError('批量修改失败');
+      }
+    },
+    
+    batchUpdateStatus: async function(status) {
+      if (selectedUsers.size === 0) {
+        api.showError('请先选择用户');
+        return;
+      }
+      
+      const action = status === 0 ? '启用' : '禁用';
+      if (!await app.confirm(`确定要${action}选中的 ${selectedUsers.size} 个用户吗？`)) return;
+      
+      try {
+        const res = await api.user.batchUpdateStatus({
+          ids: Array.from(selectedUsers),
+          status
+        });
+        
+        if (res.code === 0) {
+          api.showSuccess(`成功${action} ${res.data.updatedCount} 个用户`);
+          this.clearSelection();
+          this.loadData();
+        } else {
+          api.showError(res.msg || `${action}失败`);
+        }
+      } catch (err) {
+        console.error('批量操作失败:', err);
+        api.showError('批量操作失败');
+      }
+    },
+    
+    showBatchPasswordModal: function() {
+      document.getElementById('passwordAffectedCount').textContent = selectedUsers.size;
+      document.getElementById('batchPasswordModal').style.display = 'flex';
+    },
+    
+    closeBatchPasswordModal: function() {
+      document.getElementById('batchPasswordModal').style.display = 'none';
+    },
+    
+    updatePasswordOperation: function() {
+      const op = document.getElementById('passwordOperation').value;
+      document.getElementById('defaultPasswordGroup').style.display = op === 'reset' || op === 'set' ? 'block' : 'none';
+      document.getElementById('randomPasswordOptions').style.display = op === 'random' ? 'block' : 'none';
+    },
+    
+    executeBatchPassword: async function() {
+      const op = document.getElementById('passwordOperation').value;
+      let password = '';
+      
+      if (op === 'reset' || op === 'set') {
+        password = document.getElementById('defaultPassword').value;
+        if (!password || password.length < 6) {
+          api.showError('密码长度不能少于6位');
+          return;
+        }
+      } else if (op === 'random') {
+        const length = parseInt(document.getElementById('randomPasswordLength').value) || 8;
+        password = Math.random().toString(36).slice(-length);
+      }
+      
+      if (!await app.confirm(`确定要重置选中的 ${selectedUsers.size} 个用户的密码吗？`)) return;
+      
+      try {
+        const res = await api.user.batchResetPassword({
+          ids: Array.from(selectedUsers),
+          password
+        });
+        
+        if (res.code === 0) {
+          api.showSuccess(`成功重置 ${res.data.updatedCount} 个用户的密码`);
+          this.closeBatchPasswordModal();
+          this.clearSelection();
+        } else {
+          api.showError(res.msg || '重置失败');
+        }
+      } catch (err) {
+        console.error('批量重置密码失败:', err);
+        api.showError('批量重置密码失败');
+      }
+    },
+    
+    batchDelete: async function() {
+      if (selectedUsers.size === 0) {
+        api.showError('请先选择用户');
+        return;
+      }
+      
+      if (!await app.confirm(`确定要删除选中的 ${selectedUsers.size} 个用户吗？此操作不可恢复！`)) return;
+      
+      try {
+        const res = await api.user.batchDeleteUsers(Array.from(selectedUsers));
+        
+        if (res.code === 0) {
+          api.showSuccess(`成功删除 ${res.data.deletedCount} 个用户`);
+          this.clearSelection();
+          this.loadData();
+        } else {
+          api.showError(res.msg || '删除失败');
+        }
+      } catch (err) {
+        console.error('批量删除失败:', err);
+        api.showError('批量删除失败');
+      }
+    },
+    
+    formatTime: function(time) {
+      if (!time) return '-';
+      const date = new Date(time);
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
+    },
+    
+    downloadImportReport: function() {
+      if (importData.length === 0) {
+        api.showError('没有导入数据');
+        return;
+      }
+      
+      const reportData = importData.map((item, index) => ({
+        行号: index + 2,
+        学号: item['学号'] || '',
+        姓名: item['姓名'] || '',
+        学院: item['学院'] || '',
+        班级: item['班级'] || '',
+        状态: item._valid ? '有效' : '无效'
+      }));
+      
+      const ws = XLSX.utils.json_to_sheet(reportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, '导入报告');
+      XLSX.writeFile(wb, '用户导入报告.xlsx');
+    }
+  };
+  
+  window.initUsersPage = function() {
+    usersPage.init();
+  };
+  
+  window.initUsersPage();
+})();
+</script>

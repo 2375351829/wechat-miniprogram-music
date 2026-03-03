@@ -1,0 +1,35 @@
+<view class="login-container">
+  <view class="login-header">
+    <image class="logo" src="/images/logo.png" mode="aspectFit"></image>
+    <text class="title">校园点歌台</text>
+    <text class="subtitle">让音乐传递温暖</text>
+  </view>
+  
+  <view class="login-content">
+    <view class="form">
+      <view class="form-item">
+        <view class="input-wrapper">
+          <text class="input-icon">👤</text>
+          <input class="input" placeholder="请输入学号" value="{{studentId}}" bindinput="onStudentIdInput" />
+        </view>
+      </view>
+      <view class="form-item">
+        <view class="input-wrapper">
+          <text class="input-icon">🔒</text>
+          <input class="input" placeholder="请输入密码" password="{{!showPassword}}" value="{{password}}" bindinput="onPasswordInput" />
+          <text class="toggle-password" bindtap="togglePassword">{{showPassword ? '🙈' : '👁️'}}</text>
+        </view>
+      </view>
+      <button class="btn-login" bindtap="studentLogin" loading="{{loading}}">登 录</button>
+    </view>
+    
+    <view class="login-tips">
+      <text class="tip-item">• 首次登录默认密码为 123456</text>
+      <text class="tip-item">• 登录后请及时修改密码</text>
+    </view>
+  </view>
+  
+  <view class="login-footer">
+    <text class="tip">登录即表示同意《用户协议》和《隐私政策》</text>
+  </view>
+</view>

@@ -1,0 +1,91 @@
+<view class="page-container">
+  <view class="form-section">
+    <view class="form-group">
+      <text class="form-label">学号 <text class="required">*</text></text>
+      <input class="form-input" placeholder="请输入学号" value="{{form.student_id}}" bindinput="onStudentIdInput" />
+    </view>
+    
+    <view class="form-group">
+      <text class="form-label">真实姓名 <text class="required">*</text></text>
+      <input class="form-input" placeholder="请输入真实姓名" value="{{form.real_name}}" bindinput="onRealNameInput" />
+    </view>
+    
+    <view class="form-group">
+      <text class="form-label">学院</text>
+      <view class="picker-input" bindtap="showCollegePicker">
+        <text class="{{form.college ? '' : 'placeholder'}}">{{form.college || '请选择学院'}}</text>
+        <text class="picker-arrow">></text>
+      </view>
+    </view>
+    
+    <view class="form-group">
+      <text class="form-label">专业</text>
+      <input class="form-input" placeholder="请输入专业" value="{{form.major}}" bindinput="onMajorInput" />
+    </view>
+    
+    <view class="form-group">
+      <text class="form-label">年级</text>
+      <view class="picker-input" bindtap="showGradePicker">
+        <text class="{{form.grade ? '' : 'placeholder'}}">{{form.grade || '请选择年级'}}</text>
+        <text class="picker-arrow">></text>
+      </view>
+    </view>
+    
+    <view class="form-group">
+      <text class="form-label">班级</text>
+      <input class="form-input" placeholder="请输入班级" value="{{form.class_name}}" bindinput="onClassInput" />
+    </view>
+    
+    <view class="form-group">
+      <text class="form-label">入学年份</text>
+      <view class="picker-input" bindtap="showYearPicker">
+        <text class="{{form.enrollment_year ? '' : 'placeholder'}}">{{form.enrollment_year || '请选择入学年份'}}</text>
+        <text class="picker-arrow">></text>
+      </view>
+    </view>
+  </view>
+  
+  <view class="tips">
+    <text>绑定学号后可使用学号登录，享受更多校园服务</text>
+  </view>
+  
+  <button class="btn-submit" bindtap="submitBind">确认绑定</button>
+</view>
+
+<view class="picker-mask" wx:if="{{showCollegePicker || showGradePicker || showYearPicker}}" bindtap="hideCollegePicker"></view>
+
+<view class="picker-popup" wx:if="{{showCollegePicker}}">
+  <view class="picker-header">
+    <text class="picker-title">选择学院</text>
+    <text class="picker-close" bindtap="hideCollegePicker">×</text>
+  </view>
+  <scroll-view class="picker-content" scroll-y>
+    <view class="picker-item" wx:for="{{collegeList}}" wx:key="index" bindtap="selectCollege" data-value="{{item}}">
+      <text>{{item}}</text>
+    </view>
+  </scroll-view>
+</view>
+
+<view class="picker-popup" wx:if="{{showGradePicker}}">
+  <view class="picker-header">
+    <text class="picker-title">选择年级</text>
+    <text class="picker-close" bindtap="hideGradePicker">×</text>
+  </view>
+  <scroll-view class="picker-content" scroll-y>
+    <view class="picker-item" wx:for="{{gradeList}}" wx:key="index" bindtap="selectGrade" data-value="{{item}}">
+      <text>{{item}}</text>
+    </view>
+  </scroll-view>
+</view>
+
+<view class="picker-popup" wx:if="{{showYearPicker}}">
+  <view class="picker-header">
+    <text class="picker-title">选择入学年份</text>
+    <text class="picker-close" bindtap="hideYearPicker">×</text>
+  </view>
+  <scroll-view class="picker-content" scroll-y>
+    <view class="picker-item" wx:for="{{yearList}}" wx:key="index" bindtap="selectYear" data-value="{{item}}">
+      <text>{{item}}</text>
+    </view>
+  </scroll-view>
+</view>

@@ -1,0 +1,748 @@
+<div class="content">
+  <div class="page-header">
+    <div>
+      <h2>播放控制</h2>
+      <p style="color: var(--text-color-secondary); margin-top: 4px; font-size: 14px;">管理播放队列，控制歌曲播放顺序</p>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1fr 320px; gap: 24px;">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">播放队列</h3>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-sm btn-secondary" onclick="playPage.refreshQueue()">
+            <span>🔄</span> 刷新
+          </button>
+          <button class="btn btn-sm btn-danger" onclick="playPage.clearQueue()">
+            <span>🗑️</span> 清空
+          </button>
+        </div>
+      </div>
+      <div class="card-body" style="padding: 0;">
+        <div id="queueList">
+          <div class="loading-state">
+            <div class="loading-spinner"></div>
+            <p>加载中...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">正在播放</h3>
+        </div>
+        <div class="card-body">
+          <div id="nowPlaying" style="text-align: center;">
+            <div class="now-playing-cover">
+              <span style="font-size: 48px;">🎵</span>
+            </div>
+            <div class="now-playing-info">
+              <div class="now-playing-name">暂无播放</div>
+              <div class="now-playing-singer">-</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top: 16px;">
+        <div class="card-header">
+          <h3 class="card-title">播放统计</h3>
+        </div>
+        <div class="card-body">
+          <div class="play-stats">
+            <div class="play-stat-item">
+              <div class="play-stat-value" id="queueCount">0</div>
+              <div class="play-stat-label">队列歌曲</div>
+            </div>
+            <div class="play-stat-item">
+              <div class="play-stat-value" id="todayPlayed">0</div>
+              <div class="play-stat-label">今日播放</div>
+            </div>
+            <div class="play-stat-item">
+              <div class="play-stat-value" id="totalPlayed">0</div>
+              <div class="play-stat-label">总播放量</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top: 16px;">
+        <div class="card-header">
+          <h3 class="card-title">快捷操作</h3>
+        </div>
+        <div class="card-body">
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <button class="btn btn-primary w-full" onclick="playPage.showAddModal()">
+              <span>➕</span> 添加歌曲到队列
+            </button>
+            <button class="btn btn-secondary w-full" onclick="playPage.shuffleQueue()">
+              <span>🔀</span> 随机排序
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="addSongModal" style="display: none;">
+  <div class="modal-content" style="max-width: 500px;">
+    <div class="modal-header">
+      <h3 class="modal-title">添加歌曲到队列</h3>
+      <span class="modal-close" onclick="playPage.closeAddModal()">&times;</span>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <input type="text" id="songSearchInput" placeholder="搜索歌曲名或歌手" onkeyup="if(event.key==='Enter')playPage.searchSongs()">
+      </div>
+      <div id="songSearchResult" style="max-height: 300px; overflow-y: auto;">
+        <div style="text-align: center; color: var(--text-color-secondary); padding: 20px;">输入关键词搜索歌曲</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="playPage.closeAddModal()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.queue-list {
+  min-height: 200px;
+}
+
+.queue-item {
+  display: flex;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border-color-split);
+  transition: background var(--transition-fast);
+  gap: 12px;
+}
+
+.queue-item:last-child {
+  border-bottom: none;
+}
+
+.queue-item:hover {
+  background: var(--bg-color-component-hover);
+}
+
+.queue-item.playing {
+  background: linear-gradient(135deg, var(--primary-color-bg) 0%, #f0f5ff 100%);
+}
+
+.queue-number {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-color-secondary);
+  flex-shrink: 0;
+}
+
+.queue-item.playing .queue-number {
+  background: var(--primary-color);
+  color: #fff;
+}
+
+.queue-cover {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  background: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: #999;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.queue-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.queue-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.queue-song-name {
+  font-weight: 500;
+  color: var(--text-color);
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.queue-song-singer {
+  font-size: 12px;
+  color: var(--text-color-secondary);
+}
+
+.queue-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.now-playing-cover {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 16px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #f0f0f0 0%, #e8e8e8 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.now-playing-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 16px;
+}
+
+.now-playing-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-color);
+  margin-bottom: 4px;
+}
+
+.now-playing-singer {
+  font-size: 13px;
+  color: var(--text-color-secondary);
+}
+
+.play-stats {
+  display: flex;
+  justify-content: space-around;
+}
+
+.play-stat-item {
+  text-align: center;
+}
+
+.play-stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.play-stat-label {
+  font-size: 12px;
+  color: var(--text-color-secondary);
+  margin-top: 4px;
+}
+
+.song-search-item {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border-bottom: 1px solid var(--border-color-split);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  gap: 12px;
+}
+
+.song-search-item:hover {
+  background: var(--bg-color-component-hover);
+}
+
+.song-search-item:last-child {
+  border-bottom: none;
+}
+
+.song-search-cover {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  background: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: #999;
+  flex-shrink: 0;
+}
+
+.song-search-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.song-search-name {
+  font-weight: 500;
+  color: var(--text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.song-search-singer {
+  font-size: 12px;
+  color: var(--text-color-secondary);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 24px;
+  color: var(--text-color-secondary);
+}
+
+.empty-state .icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 40px 24px;
+  color: var(--text-color-secondary);
+}
+
+.loading-state .loading-spinner {
+  margin: 0 auto 12px;
+}
+
+@media (max-width: 992px) {
+  .content > div:first-of-type {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
+<script>
+(function() {
+  let queueData = [];
+  let currentSong = null;
+  
+  window.playPage = {
+    init: function() {
+      this.loadData();
+    },
+    
+    loadData: async function() {
+      await Promise.all([
+        this.loadQueue(),
+        this.loadStats()
+      ]);
+    },
+    
+    loadQueue: async function() {
+      const container = document.getElementById('queueList');
+      
+      try {
+        const res = await api.play.getQueue({ page: 1, pageSize: 100 });
+        console.log('加载队列响应:', res);
+        if (res.code === 0 && res.data) {
+          // 后端返回的是分页数据，list 是歌曲列表
+          queueData = res.data.list || [];
+          currentSong = null; // 当前播放歌曲从 loadStatus 获取
+          console.log('队列数据:', queueData);
+          this.renderQueue();
+          this.renderNowPlaying();
+        }
+      } catch (error) {
+        console.error('加载队列失败:', error);
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="icon">⚠️</div>
+            <p>加载失败</p>
+          </div>
+        `;
+      }
+    },
+    
+    loadStats: async function() {
+      try {
+        const res = await api.play.getStats();
+        if (res.code === 0 && res.data) {
+          document.getElementById('queueCount').textContent = queueData.length;
+          document.getElementById('todayPlayed').textContent = res.data.todayPlayed || 0;
+          document.getElementById('totalPlayed').textContent = res.data.totalPlayed || 0;
+        }
+      } catch (error) {
+        console.error('加载统计失败:', error);
+      }
+    },
+    
+    renderQueue: function() {
+      const container = document.getElementById('queueList');
+      
+      if (queueData.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="icon">🎵</div>
+            <p>播放队列为空</p>
+          </div>
+        `;
+        return;
+      }
+      
+      let html = '<div class="queue-list">';
+      
+      queueData.forEach((item, index) => {
+        const isPlaying = currentSong && currentSong.id === item.id;
+        
+        html += `
+          <div class="queue-item ${isPlaying ? 'playing' : ''}" data-id="${item.id}">
+            <div class="queue-number">${index + 1}</div>
+            <div class="queue-cover">
+              ${item.cover_url ? `<img src="${item.cover_url}" onerror="this.style.display='none';this.parentElement.innerHTML='🎵'">` : '🎵'}
+            </div>
+            <div class="queue-info">
+              <div class="queue-song-name">${item.song_name || '-'}</div>
+              <div class="queue-song-singer">${item.singer || '未知歌手'}</div>
+            </div>
+            <div class="queue-actions">
+              ${index > 0 ? `<button class="btn btn-sm btn-secondary" onclick="playPage.moveUp(${index})" title="上移">↑</button>` : ''}
+              ${index < queueData.length - 1 ? `<button class="btn btn-sm btn-secondary" onclick="playPage.moveDown(${index})" title="下移">↓</button>` : ''}
+              <button class="btn btn-sm btn-danger" onclick="playPage.removeFromQueue(${item.id})">移除</button>
+            </div>
+          </div>
+        `;
+      });
+      
+      html += '</div>';
+      container.innerHTML = html;
+    },
+    
+    renderNowPlaying: function() {
+      const container = document.getElementById('nowPlaying');
+      
+      if (!currentSong) {
+        container.innerHTML = `
+          <div class="now-playing-cover">
+            <span style="font-size: 48px;">🎵</span>
+          </div>
+          <div class="now-playing-info">
+            <div class="now-playing-name">暂无播放</div>
+            <div class="now-playing-singer">-</div>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = `
+        <div class="now-playing-cover">
+          ${currentSong.cover_url ? `<img src="${currentSong.cover_url}" onerror="this.parentElement.innerHTML='<span style=\\'font-size:48px;\\'>🎵</span>'">` : '<span style="font-size: 48px;">🎵</span>'}
+        </div>
+        <div class="now-playing-info">
+          <div class="now-playing-name">${currentSong.song_name || '-'}</div>
+          <div class="now-playing-singer">${currentSong.singer || '未知歌手'}</div>
+        </div>
+        <div style="margin-top: 16px; display: flex; justify-content: center; gap: 8px;">
+          <button class="btn btn-sm btn-secondary" onclick="playPage.prevSong()">⏮ 上一首</button>
+          <button class="btn btn-sm btn-primary" onclick="playPage.nextSong()">下一首 ⏭</button>
+        </div>
+      `;
+    },
+    
+    refreshQueue: function() {
+      this.loadQueue();
+    },
+    
+    clearQueue: async function() {
+      if (!await app.confirm('确定要清空播放队列吗？')) return;
+      
+      try {
+        const res = await api.play.clearQueue();
+        if (res.code === 0) {
+          api.showSuccess('队列已清空');
+          this.loadData();
+        }
+      } catch (error) {
+        api.showError('操作失败');
+      }
+    },
+    
+    moveUp: async function(index) {
+      if (index <= 0) return;
+      
+      const temp = queueData[index];
+      queueData[index] = queueData[index - 1];
+      queueData[index - 1] = temp;
+      
+      await this.saveQueueOrder();
+    },
+    
+    moveDown: async function(index) {
+      if (index >= queueData.length - 1) return;
+      
+      const temp = queueData[index];
+      queueData[index] = queueData[index + 1];
+      queueData[index + 1] = temp;
+      
+      await this.saveQueueOrder();
+    },
+    
+    saveQueueOrder: async function() {
+      const orders = queueData.map((item, index) => ({ id: item.id, sort: index }));
+      
+      try {
+        const res = await api.play.updateQueueOrder(orders);
+        if (res.code === 0) {
+          this.renderQueue();
+        }
+      } catch (error) {
+        api.showError('排序失败');
+      }
+    },
+    
+    removeFromQueue: async function(id) {
+      if (!await app.confirm('确定要从队列中移除这首歌曲吗？')) return;
+      
+      try {
+        const res = await api.play.removeFromQueue(id);
+        if (res.code === 0) {
+          api.showSuccess('已移除');
+          this.loadData();
+        }
+      } catch (error) {
+        api.showError('移除失败');
+      }
+    },
+    
+    shuffleQueue: async function() {
+      if (queueData.length < 2) {
+        api.showError('队列歌曲太少');
+        return;
+      }
+      
+      for (let i = queueData.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [queueData[i], queueData[j]] = [queueData[j], queueData[i]];
+      }
+      
+      await this.saveQueueOrder();
+      api.showSuccess('已随机排序');
+    },
+    
+    showAddModal: function() {
+      document.getElementById('songSearchInput').value = '';
+      document.getElementById('songSearchResult').innerHTML = '<div style="text-align: center; color: var(--text-color-secondary); padding: 20px;">输入关键词搜索歌曲</div>';
+      document.getElementById('addSongModal').style.display = 'flex';
+    },
+    
+    closeAddModal: function() {
+      document.getElementById('addSongModal').style.display = 'none';
+    },
+    
+    searchSongs: async function() {
+      const keyword = document.getElementById('songSearchInput').value.trim();
+      const container = document.getElementById('songSearchResult');
+      
+      if (!keyword) {
+        container.innerHTML = '<div style="text-align: center; color: var(--text-color-secondary); padding: 20px;">请输入搜索关键词</div>';
+        return;
+      }
+      
+      try {
+        const res = await api.song.search(keyword);
+        if (res.code === 0 && res.data && res.data.length > 0) {
+          container.innerHTML = res.data.map(song => `
+            <div class="song-search-item" onclick="playPage.addToQueue(${song.id}, '${song.name.replace(/'/g, "\\'")}')">
+              <div class="song-search-cover">
+                ${song.cover_url ? `<img src="${song.cover_url}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" onerror="this.style.display='none'">` : '🎵'}
+              </div>
+              <div class="song-search-info">
+                <div class="song-search-name">${song.name}</div>
+                <div class="song-search-singer">${song.singer || '未知歌手'}</div>
+              </div>
+              <button class="btn btn-sm btn-primary">添加</button>
+            </div>
+          `).join('');
+        } else {
+          container.innerHTML = '<div style="text-align: center; color: var(--text-color-secondary); padding: 20px;">未找到相关歌曲</div>';
+        }
+      } catch (error) {
+        api.showError('搜索失败');
+      }
+    },
+    
+    addToQueue: async function(songId, songName) {
+      console.log('添加歌曲到队列:', { songId, songName });
+      try {
+        console.log('调用 API:', 'api.play.addSongToQueue', songId);
+        const res = await api.play.addSongToQueue(songId);
+        console.log('API 响应:', res);
+        if (res.code === 0) {
+          api.showSuccess(`已添加「${songName}」到队列`);
+          this.closeAddModal();
+          this.loadData();
+        } else {
+          console.error('添加失败，错误码:', res.code, '消息:', res.msg);
+          api.showError(res.msg || '添加失败');
+        }
+      } catch (error) {
+        console.error('添加失败，异常:', error);
+        api.showError('添加失败：' + (error.message || '未知错误'));
+      }
+    },
+    
+    prevSong: async function() {
+      if (!await app.confirm('确定要切换到上一首吗？')) return;
+      try {
+        // 目前没有专门的上一首 API，使用播放历史中的歌曲
+        api.showInfo('暂无上一首功能，请从播放历史中选择');
+      } catch (error) {
+        console.error('上一首失败:', error);
+        api.showError('操作失败');
+      }
+    },
+    
+    nextSong: async function() {
+      try {
+        const res = await api.play.playNext();
+        console.log('下一首响应:', res);
+        if (res.code === 0) {
+          api.showSuccess(res.msg || '已开始播放下一首');
+          this.loadStatus();
+          this.loadQueue();
+        } else {
+          // 显示具体的错误信息
+          api.showError(res.msg || '播放失败');
+        }
+      } catch (error) {
+        console.error('下一首失败:', error);
+        // 如果错误信息存在，显示它
+        const errorMsg = error?.response?.data?.msg || error.message || '操作失败';
+        api.showError(errorMsg);
+      }
+    },
+    
+    togglePlay: async function(action) {
+      try {
+        const res = await api.play.togglePlay(action);
+        if (res.code === 0) {
+          this.loadStatus();
+        }
+      } catch (error) {
+        api.showError('操作失败');
+      }
+    },
+    
+    loadStatus: async function() {
+      try {
+        const res = await api.play.getStatus();
+        console.log('加载状态响应:', res);
+        if (res.code === 0 && res.data) {
+          const data = res.data;
+          
+          const nowPlayingContainer = document.getElementById('nowPlaying');
+          if (!nowPlayingContainer) {
+            console.warn('nowPlaying 容器不存在');
+            return;
+          }
+          
+          if (data.isPlaying && data.currentSong) {
+            const isPaused = data.isPaused;
+            nowPlayingContainer.innerHTML = `
+              <div class="now-playing-cover">
+                ${data.currentSong.coverUrl ? `<img src="${data.currentSong.coverUrl}" onerror="this.parentElement.innerHTML='<span style=\\'font-size:48px;\\'>🎵</span>'">` : '<span style="font-size: 48px;">🎵</span>'}
+              </div>
+              <div class="now-playing-info">
+                <div class="now-playing-name">${data.currentSong.songName || '-'}</div>
+                <div class="now-playing-singer">${data.currentSong.singer || '未知歌手'}</div>
+                ${isPaused ? '<div style="margin-top:8px;color:var(--warning-color);font-size:13px;">⏸ 已暂停</div>' : ''}
+              </div>
+              <div style="margin-top: 16px; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;">
+                <button class="btn btn-sm btn-secondary" onclick="playPage.prevSong()">⏮ 上一首</button>
+                ${isPaused ? 
+                  '<button class="btn btn-sm btn-primary" onclick="playPage.togglePlay(\'resume\')">▶ 播放</button>' : 
+                  '<button class="btn btn-sm btn-warning" onclick="playPage.togglePlay(\'pause\')">⏸ 暂停</button>'}
+                <button class="btn btn-sm btn-primary" onclick="playPage.nextSong()">下一首 ⏭</button>
+              </div>
+              <div style="margin-top: 16px;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                  <span style="font-size:12px;color:var(--text-color-secondary);">🔊</span>
+                  <input type="range" min="0" max="100" value="${data.volume}" 
+                    onchange="playPage.setVolume(this.value)" 
+                    style="flex:1;cursor:pointer;" />
+                  <span style="font-size:12px;color:var(--text-color-secondary);width:30px;text-align:right;">${data.volume}%</span>
+                </div>
+              </div>
+              <div style="margin-top: 12px;">
+                <div style="display:flex;gap:8px;justify-content:center;">
+                  <button class="btn btn-sm ${data.mode === 'single' ? 'btn-primary' : 'btn-secondary'}" 
+                    onclick="playPage.setMode('single')" style="font-size:12px;">🔂 单曲</button>
+                  <button class="btn btn-sm ${data.mode === 'list' ? 'btn-primary' : 'btn-secondary'}" 
+                    onclick="playPage.setMode('list')" style="font-size:12px;">🔁 列表</button>
+                  <button class="btn btn-sm ${data.mode === 'random' ? 'btn-primary' : 'btn-secondary'}" 
+                    onclick="playPage.setMode('random')" style="font-size:12px;">🔀 随机</button>
+                </div>
+              </div>
+            `;
+          } else {
+            nowPlayingContainer.innerHTML = `
+              <div class="empty-state">
+                <div class="icon">🎵</div>
+                <p>暂无正在播放的歌曲</p>
+              </div>
+            `;
+          }
+        }
+      } catch (error) {
+        console.error('加载状态失败:', error);
+        const nowPlayingContainer = document.getElementById('nowPlaying');
+        if (nowPlayingContainer) {
+          nowPlayingContainer.innerHTML = `
+            <div class="empty-state">
+              <div class="icon">⚠️</div>
+              <p>加载失败</p>
+            </div>
+          `;
+        }
+      }
+    },
+    
+    setVolume: async function(volume) {
+      try {
+        const res = await api.play.updateVolume(parseInt(volume));
+        if (res.code === 0) {
+          this.loadStatus();
+        }
+      } catch (error) {
+        api.showError('设置音量失败');
+      }
+    },
+    
+    setMode: async function(mode) {
+      try {
+        const res = await api.play.setPlayMode(mode);
+        if (res.code === 0) {
+          this.loadStatus();
+        }
+      } catch (error) {
+        api.showError('设置模式失败');
+      }
+    }
+  };
+  
+  window.initPlayPage = function() {
+    playPage.init();
+    setInterval(() => {
+      playPage.loadStatus();
+    }, 5000);
+  };
+  
+  window.initPlayPage();
+})();
+</script>

@@ -1,0 +1,99 @@
+<view class="page-container">
+  <view class="tabs">
+    <view class="tab {{currentTab === 'request' ? 'active' : ''}}" bindtap="switchTab" data-tab="request">
+      <text>点歌记录</text>
+    </view>
+    <view class="tab {{currentTab === 'blessing' ? 'active' : ''}}" bindtap="switchTab" data-tab="blessing">
+      <text>祝福记录</text>
+    </view>
+    <view class="tab {{currentTab === 'play' ? 'active' : ''}}" bindtap="switchTab" data-tab="play">
+      <text>播放记录</text>
+    </view>
+  </view>
+  
+  <view class="filter-bar" wx:if="{{currentTab !== 'play'}}">
+    <view class="filter-item {{currentStatus === '' ? 'active' : ''}}" bindtap="filterByStatus" data-status="">全部</view>
+    <view class="filter-item {{currentStatus === '0' ? 'active' : ''}}" bindtap="filterByStatus" data-status="0">待审核</view>
+    <view class="filter-item {{currentStatus === '1' ? 'active' : ''}}" bindtap="filterByStatus" data-status="1">已通过</view>
+    <view class="filter-item {{currentStatus === '2' ? 'active' : ''}}" bindtap="filterByStatus" data-status="2">已驳回</view>
+  </view>
+  
+  <view class="list-container" wx:if="{{currentTab === 'request'}}">
+    <view class="request-list" wx:if="{{requestList.length > 0}}">
+      <view class="request-item" wx:for="{{requestList}}" wx:key="id">
+        <view class="request-header">
+          <text class="song-name">{{item.song_name}}</text>
+          <text class="status-tag {{item.statusClass}}">{{item.statusText}}</text>
+        </view>
+        <view class="request-info">
+          <text class="singer">{{item.singer}}</text>
+          <text class="time">{{item.create_time}}</text>
+        </view>
+        <view class="request-message" wx:if="{{item.message}}">
+          <text>{{item.message}}</text>
+        </view>
+        <view class="request-receiver" wx:if="{{item.receiver}}">
+          <text>送给: {{item.receiver}}</text>
+        </view>
+        <view class="request-remark" wx:if="{{item.review_remark}}">
+          <text class="remark-label">驳回原因:</text>
+          <text class="remark-content">{{item.review_remark}}</text>
+        </view>
+        <view class="request-actions" wx:if="{{item.status === 0}}">
+          <button class="btn-cancel-request" bindtap="cancelRequest" data-id="{{item.id}}">取消</button>
+        </view>
+      </view>
+    </view>
+    <view class="empty-state" wx:else>
+      <image src="/images/empty.png" mode="aspectFit"></image>
+      <text>暂无点歌记录</text>
+    </view>
+  </view>
+  
+  <view class="list-container" wx:if="{{currentTab === 'blessing'}}">
+    <view class="blessing-list" wx:if="{{blessingList.length > 0}}">
+      <view class="blessing-item" wx:for="{{blessingList}}" wx:key="id">
+        <view class="blessing-header">
+          <text class="blessing-type">{{item.type_name}}</text>
+          <text class="status-tag {{item.statusClass}}">{{item.statusText}}</text>
+        </view>
+        <view class="blessing-content">
+          <text>{{item.content}}</text>
+        </view>
+        <view class="blessing-info">
+          <text>送给: {{item.receiver}}</text>
+          <text class="time">{{item.create_time}}</text>
+        </view>
+        <view class="blessing-remark" wx:if="{{item.review_remark}}">
+          <text class="remark-label">驳回原因:</text>
+          <text class="remark-content">{{item.review_remark}}</text>
+        </view>
+      </view>
+    </view>
+    <view class="empty-state" wx:else>
+      <image src="/images/empty.png" mode="aspectFit"></image>
+      <text>暂无祝福记录</text>
+    </view>
+  </view>
+  
+  <view class="list-container" wx:if="{{currentTab === 'play'}}">
+    <view class="play-list" wx:if="{{playList.length > 0}}">
+      <view class="play-item" wx:for="{{playList}}" wx:key="requestId">
+        <view class="play-header">
+          <text class="song-name">{{item.songName}}</text>
+          <text class="play-time">{{item.playTime}}</text>
+        </view>
+        <view class="play-info">
+          <text class="singer">{{item.singer}}</text>
+        </view>
+        <view class="play-message" wx:if="{{item.blessing}}">
+          <text>{{item.blessing}}</text>
+        </view>
+      </view>
+    </view>
+    <view class="empty-state" wx:else>
+      <image src="/images/empty.png" mode="aspectFit"></image>
+      <text>暂无播放记录</text>
+    </view>
+  </view>
+</view>

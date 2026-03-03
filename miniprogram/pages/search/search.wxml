@@ -1,0 +1,81 @@
+<view class="page-container">
+  <view class="search-header">
+    <view class="search-box">
+      <input class="search-input" placeholder="搜索歌曲、歌手" value="{{keyword}}" bindinput="onKeywordInput" bindconfirm="onSearch" />
+      <button class="search-btn" bindtap="onSearch">搜索</button>
+    </view>
+  </view>
+  
+  <view class="search-tabs">
+    <view class="tab {{currentTab === 'hot' ? 'active' : ''}}" bindtap="switchTab" data-tab="hot">热门歌曲</view>
+    <view class="tab {{currentTab === 'recent' ? 'active' : ''}}" bindtap="switchTab" data-tab="recent">最新上架</view>
+  </view>
+  
+  <view class="search-results" wx:if="{{searchResults.length > 0}}">
+    <view class="song-list">
+      <view class="song-item" wx:for="{{searchResults}}" wx:key="id" bindtap="selectSong" data-song="{{item}}">
+        <image class="song-cover" src="{{item.cover_url || 'https://p1.music.126.net/qRI8KPF6LcL8jB2G8rZjZw==/1364494838762764.jpg'}}" mode="aspectFill"></image>
+        <view class="song-info">
+          <text class="song-name">{{item.name}}</text>
+          <text class="song-singer">{{item.singer}}</text>
+        </view>
+        <view class="song-meta">
+          <text class="play-count">{{item.play_count || 0}}text>次播放</text>
+        </view>
+      </view>
+    </view>
+    
+    <view class="empty-state" wx:if="{{keyword && searchResults.length === 0 && !loading}}">
+      <image src="/images/empty.png" mode="aspectFit"></image>
+      <text>未找到相关歌曲</text>
+    </view>
+    
+    <view class="loading-state" wx:if="{{loading}}">
+      <text>搜索中...</text>
+    </view>
+  </view>
+  
+  <view class="section" wx:if="{{currentTab === 'hot'}}">
+    <view class="section-header">
+      <text class="section-title">热门歌曲</text>
+    </view>
+    <view class="song-list">
+      <view class="song-item" wx:for="{{hotSongs}}" wx:key="id" bindtap="selectSong" data-song="{{item}}">
+        <image class="song-cover" src="{{item.cover_url || 'https://p1.music.126.net/qRI8KPF6LcL8jB2G8rZjZw==/1364494838762764.jpg'}}" mode="aspectFill"></image>
+        <view class="song-info">
+          <text class="song-name">{{item.name}}</text>
+          <text class="song-singer">{{item.singer}}</text>
+        </view>
+        <view class="song-meta">
+          <text class="play-count">{{item.play_count || 0}}text>次播放</text>
+        </view>
+      </view>
+    </view>
+    <view class="empty-state" wx:if="{{hotSongs.length === 0}}">
+      <image src="/images/empty.png" mode="aspectFit"></image>
+      <text>暂无热门歌曲</text>
+    </view>
+  </view>
+  
+  <view class="section" wx:if="{{currentTab === 'recent'}}">
+    <view class="section-header">
+      <text class="section-title">最新上架</text>
+    </view>
+    <view class="song-list">
+      <view class="song-item" wx:for="{{recentSongs}}" wx:key="id" bindtap="selectSong" data-song="{{item}}">
+        <image class="song-cover" src="{{item.cover_url || 'https://p1.music.126.net/qRI8KPF6LcL8jB2G8rZjZw==/1364494838762764.jpg'}}" mode="aspectFill"></image>
+        <view class="song-info">
+          <text class="song-name">{{item.name}}</text>
+          <text class="song-singer">{{item.singer}}</text>
+        </view>
+        <view class="song-meta">
+          <text class="play-count">{{item.play_count || 0}}text>次播放</text>
+        </view>
+      </view>
+    </view>
+    <view class="empty-state" wx:if="{{recentSongs.length === 0}}">
+      <image src="/images/empty.png" mode="aspectFit"></image>
+      <text>暂无最新歌曲</text>
+    </view>
+  </view>
+</view>

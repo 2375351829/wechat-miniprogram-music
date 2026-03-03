@@ -1,0 +1,243 @@
+<div class="content">
+  <div class="page-header">
+    <div>
+      <h2>系统设置</h2>
+      <p style="color: var(--text-color-secondary); margin-top: 4px; font-size: 14px;">管理系统配置和个人信息</p>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px;">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">修改密码</h3>
+      </div>
+      <div class="card-body">
+        <form id="passwordForm">
+          <div class="form-group">
+            <label>当前密码 <span style="color: var(--error-color);">*</span></label>
+            <input type="password" id="oldPassword" required placeholder="请输入当前密码">
+          </div>
+          <div class="form-group">
+            <label>新密码 <span style="color: var(--error-color);">*</span></label>
+            <input type="password" id="newPassword" required placeholder="请输入新密码（至少6位）">
+          </div>
+          <div class="form-group">
+            <label>确认新密码 <span style="color: var(--error-color);">*</span></label>
+            <input type="password" id="confirmPassword" required placeholder="请再次输入新密码">
+          </div>
+          <button type="button" class="btn btn-primary" onclick="changePassword()">
+            <span>🔐</span> 修改密码
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">系统信息</h3>
+      </div>
+      <div class="card-body">
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="info-icon" style="background: linear-gradient(135deg, #1890ff 0%, #69c0ff 100%);">📦</div>
+            <div class="info-content">
+              <div class="info-label">系统版本</div>
+              <div class="info-value">v2.0.0</div>
+            </div>
+          </div>
+          <div class="info-item">
+            <div class="info-icon" style="background: linear-gradient(135deg, #52c41a 0%, #95de64 100%);">🌐</div>
+            <div class="info-content">
+              <div class="info-label">服务器地址</div>
+              <div class="info-value">http://localhost:6232</div>
+            </div>
+          </div>
+          <div class="info-item">
+            <div class="info-icon" style="background: linear-gradient(135deg, #722ed1 0%, #b37feb 100%);">👤</div>
+            <div class="info-content">
+              <div class="info-label">当前管理员</div>
+              <div class="info-value" id="currentAdmin">-</div>
+            </div>
+          </div>
+          <div class="info-item">
+            <div class="info-icon" style="background: linear-gradient(135deg, #eb2f96 0%, #ff85c0 100%);">🕐</div>
+            <div class="info-content">
+              <div class="info-label">登录时间</div>
+              <div class="info-value" id="loginTime">-</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top: 24px;">
+    <div class="card-header">
+      <h3 class="card-title">数据管理</h3>
+    </div>
+    <div class="card-body">
+      <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+        <button class="btn btn-secondary" onclick="clearCache()">
+          <span>🗑️</span> 清除缓存
+        </button>
+        <button class="btn btn-warning" onclick="exportData()">
+          <span>📤</span> 导出数据
+        </button>
+        <button class="btn btn-info" onclick="showSystemLogs()">
+          <span>📋</span> 系统日志
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top: 24px;">
+    <div class="card-header">
+      <h3 class="card-title">关于系统</h3>
+    </div>
+    <div class="card-body">
+      <div style="display: flex; align-items: center; gap: 24px;">
+        <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 40px; box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);">
+          🎵
+        </div>
+        <div>
+          <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 4px;">校园点歌台管理系统</h3>
+          <p style="color: var(--text-color-secondary); font-size: 14px; margin-bottom: 8px;">为校园广播站提供便捷的点歌管理服务</p>
+          <p style="color: var(--text-color-disabled); font-size: 12px;">© 2024 Campus Radio Song Request System</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: #fafafa;
+  border-radius: 8px;
+  transition: all var(--transition-fast);
+}
+
+.info-item:hover {
+  background: #f0f5ff;
+}
+
+.info-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.info-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.info-label {
+  font-size: 12px;
+  color: var(--text-color-secondary);
+  margin-bottom: 2px;
+}
+
+.info-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 768px) {
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
+<script>
+window.initSettingsPage = function() {
+  loadAdminInfo();
+};
+
+function loadAdminInfo() {
+  const adminInfo = JSON.parse(localStorage.getItem('admin_info') || '{}');
+  document.getElementById('currentAdmin').textContent = adminInfo.real_name || adminInfo.username || '-';
+  document.getElementById('loginTime').textContent = formatTime(new Date().toISOString());
+}
+
+async function changePassword() {
+  const oldPassword = document.getElementById('oldPassword').value;
+  const newPassword = document.getElementById('newPassword').value;
+  const confirmPassword = document.getElementById('confirmPassword').value;
+  
+  if (!oldPassword || !newPassword || !confirmPassword) {
+    api.showError('请填写所有字段');
+    return;
+  }
+  
+  if (newPassword !== confirmPassword) {
+    api.showError('两次输入的新密码不一致');
+    return;
+  }
+  
+  if (newPassword.length < 6) {
+    api.showError('新密码长度不能少于6位');
+    return;
+  }
+  
+  try {
+    const res = await api.admin.changePassword({
+      oldPassword,
+      newPassword
+    });
+    
+    if (res.code === 0) {
+      api.showSuccess('密码修改成功，请重新登录');
+      setTimeout(() => {
+        api.clearToken();
+        window.location.href = 'pages/login.html';
+      }, 2000);
+    } else {
+      api.showError(res.msg || '修改失败');
+    }
+  } catch (error) {
+    console.error('修改密码失败:', error);
+    api.showError('修改失败');
+  }
+}
+
+function clearCache() {
+  api.clearAllCache();
+  api.showSuccess('缓存已清除');
+}
+
+function exportData() {
+  api.showSuccess('数据导出功能开发中');
+}
+
+function showSystemLogs() {
+  api.showInfo('系统日志功能开发中');
+}
+
+function formatTime(time) {
+  if (!time) return '-';
+  const date = new Date(time);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+}
+
+window.initSettingsPage();
+</script>

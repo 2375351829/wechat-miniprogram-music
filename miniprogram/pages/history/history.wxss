@@ -1,0 +1,215 @@
+.page-container {
+  padding-bottom: 40rpx;
+}
+
+.tabs {
+  display: flex;
+  background-color: #ffffff;
+  padding: 20rpx;
+  margin-bottom: 20rpx;
+}
+
+.tab {
+  flex: 1;
+  text-align: center;
+  padding: 16rpx 0;
+  font-size: 28rpx;
+  color: #666666;
+  position: relative;
+}
+
+.tab.active {
+  color: #4A90D9;
+  font-weight: bold;
+}
+
+.tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40rpx;
+  height: 4rpx;
+  background-color: #4A90D9;
+  border-radius: 2rpx;
+}
+
+.filter-bar {
+  display: flex;
+  background-color: #ffffff;
+  padding: 16rpx 20rpx;
+  margin-bottom: 20rpx;
+}
+
+.filter-item {
+  padding: 12rpx 24rpx;
+  font-size: 26rpx;
+  color: #666666;
+  background-color: #f5f5f5;
+  border-radius: 30rpx;
+  margin-right: 16rpx;
+}
+
+.filter-item.active {
+  background-color: #4A90D9;
+  color: #ffffff;
+}
+
+.list-container {
+  padding: 0 20rpx;
+}
+
+.request-list, .blessing-list, .play-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.request-item, .blessing-item, .play-item {
+  background-color: #ffffff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+}
+
+.request-header, .blessing-header, .play-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+
+.song-name {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333333;
+}
+
+.status-tag {
+  font-size: 24rpx;
+  padding: 4rpx 16rpx;
+  border-radius: 20rpx;
+}
+
+.tag-pending {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.tag-approved {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.tag-rejected {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.tag-played {
+  background-color: #d1ecf1;
+  color: #0c5460;
+}
+
+.request-info, .blessing-info, .play-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+
+.singer {
+  font-size: 26rpx;
+  color: #666666;
+}
+
+.time, .play-time {
+  font-size: 24rpx;
+  color: #999999;
+}
+
+.request-message, .play-message {
+  background-color: #f5f5f5;
+  border-radius: 8rpx;
+  padding: 16rpx;
+  margin-top: 12rpx;
+  font-size: 26rpx;
+  color: #666666;
+}
+
+.request-receiver {
+  font-size: 24rpx;
+  color: #999999;
+  margin-top: 8rpx;
+}
+
+.request-remark, .blessing-remark {
+  background-color: #fff3cd;
+  border-radius: 8rpx;
+  padding: 16rpx;
+  margin-top: 12rpx;
+}
+
+.remark-label {
+  font-size: 24rpx;
+  color: #856404;
+}
+
+.remark-content {
+  font-size: 24rpx;
+  color: #856404;
+  margin-left: 8rpx;
+}
+
+.request-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16rpx;
+}
+
+.btn-cancel-request {
+  font-size: 24rpx;
+  color: #e74c3c;
+  background-color: transparent;
+  border: 1rpx solid #e74c3c;
+  border-radius: 30rpx;
+  padding: 8rpx 24rpx;
+}
+
+.btn-cancel-request::after {
+  border: none;
+}
+
+.blessing-type {
+  font-size: 24rpx;
+  color: #4A90D9;
+  background-color: #e3f2fd;
+  padding: 4rpx 16rpx;
+  border-radius: 20rpx;
+}
+
+.blessing-content {
+  font-size: 28rpx;
+  color: #333333;
+  line-height: 1.6;
+  margin-bottom: 12rpx;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100rpx 0;
+}
+
+.empty-state image {
+  width: 200rpx;
+  height: 200rpx;
+  margin-bottom: 20rpx;
+}
+
+.empty-state text {
+  font-size: 28rpx;
+  color: #999999;
+}

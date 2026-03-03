@@ -1,0 +1,116 @@
+<view class="page-container">
+  <swiper class="banner-swiper" indicator-dots autoplay="{{config.banner_auto_play === 1}}" circular interval="{{config.banner_interval || 3000}}" wx:if="{{config.show_banners === 1 && banners.length > 0}}">
+    <swiper-item wx:for="{{banners}}" wx:key="id">
+      <image class="banner-image" src="{{item.image_url}}" mode="aspectFill"></image>
+    </swiper-item>
+  </swiper>
+  
+  <view class="announcement-bar" wx:if="{{config.show_announcements === 1 && announcements.length > 0}}" bindtap="showAnnouncements">
+    <image class="announcement-icon" src="/images/logo.png"></image>
+    <swiper class="announcement-swiper" vertical autoplay circular>
+      <swiper-item wx:for="{{announcements}}" wx:key="id">
+        <text class="announcement-text">{{item.title}}</text>
+      </swiper-item>
+    </swiper>
+  </view>
+  
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">当前播放</text>
+    </view>
+    <view class="current-play" wx:if="{{currentPlaying}}">
+      <view class="play-info">
+        <text class="song-name">{{currentPlaying.songName}}</text>
+        <text class="singer">- {{currentPlaying.singer}}</text>
+      </view>
+      <view class="play-meta">
+        <text class="requester">点歌人: {{currentPlaying.requesterName}}</text>
+      </view>
+    </view>
+    <view class="empty-state" wx:else>
+      <text>暂无播放</text>
+    </view>
+  </view>
+  
+  <view class="section" wx:if="{{config.show_hot_songs === 1 && hotSongs.length > 0}}">
+    <view class="section-header">
+      <text class="section-title">热门歌曲</text>
+      <text class="section-more" bindtap="goToSearch">更多</text>
+    </view>
+    <view class="song-list">
+      <view class="song-item" wx:for="{{hotSongs}}" wx:key="id" bindtap="selectSong" data-song="{{item}}">
+        <image class="song-cover" src="{{item.cover_url || 'https://p1.music.126.net/qRI8KPF6LcL8jB2G8rZjZw==/1364494838762764.jpg'}}" mode="aspectFill"></image>
+        <view class="song-info">
+          <text class="song-name">{{item.name}}</text>
+          <text class="singer">{{item.singer}}</text>
+        </view>
+        <view class="play-count">
+          <text>{{item.play_count}}次</text>
+        </view>
+      </view>
+    </view>
+  </view>
+  
+  <view class="section" wx:if="{{config.show_new_songs === 1 && newSongs.length > 0}}">
+    <view class="section-header">
+      <text class="section-title">新歌推荐</text>
+      <text class="section-more" bindtap="goToSearch">更多</text>
+    </view>
+    <view class="song-list">
+      <view class="song-item" wx:for="{{newSongs}}" wx:key="id" bindtap="selectSong" data-song="{{item}}">
+        <image class="song-cover" src="{{item.cover_url || 'https://p1.music.126.net/qRI8KPF6LcL8jB2G8rZjZw==/1364494838762764.jpg'}}" mode="aspectFill"></image>
+        <view class="song-info">
+          <text class="song-name">{{item.name}}</text>
+          <text class="singer">{{item.singer}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+  
+  <view class="section" wx:if="{{config.show_recommend_songs === 1 && recommendSongs.length > 0}}">
+    <view class="section-header">
+      <text class="section-title">推荐歌单</text>
+    </view>
+    <scroll-view class="recommend-scroll" scroll-x>
+      <view class="recommend-item" wx:for="{{recommendSongs}}" wx:key="id" bindtap="selectSong" data-song="{{item}}">
+        <image class="recommend-cover" src="{{item.cover_url || 'https://p1.music.126.net/qRI8KPF6LcL8jB2G8rZjZw==/1364494838762764.jpg'}}" mode="aspectFill"></image>
+        <text class="recommend-name">{{item.name}}</text>
+      </view>
+    </scroll-view>
+  </view>
+  
+  <view class="float-btn" bindtap="openRequestModal">
+    <image src="/images/logo.png"></image>
+    <text>点歌</text>
+  </view>
+</view>
+
+<view class="modal-mask" wx:if="{{showModal}}" bindtap="closeModal"></view>
+<view class="modal-container" wx:if="{{showModal}}">
+  <view class="modal-header">
+    <text class="modal-title">点歌</text>
+    <text class="modal-close" bindtap="closeModal">×</text>
+  </view>
+  <view class="modal-content">
+    <view class="form-group">
+      <text class="form-label">歌曲名称 *</text>
+      <input class="form-input" placeholder="请输入歌曲名称" value="{{selectedSong.name}}" bindinput="onSongNameInput" />
+    </view>
+    <view class="form-group">
+      <text class="form-label">歌手 *</text>
+      <input class="form-input" placeholder="请输入歌手名称" value="{{selectedSong.singer}}" bindinput="onSingerInput" />
+    </view>
+    <view class="form-group">
+      <text class="form-label">送给谁</text>
+      <input class="form-input" placeholder="请输入接收者（选填）" value="{{receiver}}" bindinput="onReceiverInput" />
+    </view>
+    <view class="form-group">
+      <text class="form-label">祝福语</text>
+      <textarea class="form-textarea" placeholder="请输入祝福语（选填，最多100字）" maxlength="100" value="{{blessing}}" bindinput="onBlessingInput"></textarea>
+    </view>
+  </view>
+  <view class="modal-footer">
+    <button class="btn-cancel" bindtap="closeModal">取消</button>
+    <button class="btn-confirm" bindtap="submitRequest">提交</button>
+  </view>
+</view>

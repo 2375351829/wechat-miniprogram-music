@@ -1,0 +1,1120 @@
+<div class="content">
+  <div class="page-header">
+    <div>
+      <h2>歌曲管理</h2>
+      <p style="color: var(--text-color-secondary); margin-top: 4px; font-size: 14px;">管理系统歌曲库，支持添加、编辑、删除歌曲</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" onclick="songsPage.showAddModal()">
+        <span>➕</span> 添加歌曲
+      </button>
+      <button class="btn btn-secondary" onclick="songsPage.showImportModal()">
+        <span>📥</span> 批量导入
+      </button>
+      <button class="btn btn-secondary" onclick="songsPage.exportSongs()">
+        <span>📤</span> 导出数据
+      </button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="filter-bar">
+        <input type="text" id="searchInput" placeholder="搜索歌曲名或歌手" style="width: 200px;" onkeyup="if(event.key==='Enter')songsPage.loadData()">
+        <select id="categoryFilter" style="width: 120px;" onchange="songsPage.loadData()">
+          <option value="">全部分类</option>
+        </select>
+        <select id="statusFilter" style="width: 120px;" onchange="songsPage.loadData()">
+          <option value="">全部状态</option>
+          <option value="1">已上架</option>
+          <option value="0">已下架</option>
+        </select>
+        <button class="btn btn-primary" onclick="songsPage.loadData()">
+          <span>🔍</span> 搜索
+        </button>
+        <button class="btn btn-secondary" onclick="songsPage.resetFilters()">
+          <span>🔄</span> 重置
+        </button>
+      </div>
+      <div class="batch-actions" id="batchActions" style="display: none;">
+        <span class="selected-count">已选择 <strong id="selectedCount">0</strong> 首歌曲</span>
+        <button class="btn btn-sm btn-success" onclick="songsPage.batchOnline()">批量上架</button>
+        <button class="btn btn-sm btn-warning" onclick="songsPage.batchOffline()">批量下架</button>
+        <button class="btn btn-sm btn-danger" onclick="songsPage.batchDelete()">批量删除</button>
+        <button class="btn btn-sm btn-secondary" onclick="songsPage.clearSelection()">取消选择</button>
+      </div>
+    </div>
+    
+    <div class="card-body" style="padding: 0;">
+      <div id="songList">
+        <div class="loading-state">
+          <div class="loading-spinner"></div>
+          <p>加载中...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="songModal" style="display: none;">
+  <div class="modal-content" style="max-width: 520px;">
+    <div class="modal-header">
+      <h3 class="modal-title" id="songModalTitle">添加歌曲</h3>
+      <span class="modal-close" onclick="songsPage.closeModal()">&times;</span>
+    </div>
+    <div class="modal-body">
+      <form id="songForm">
+        <input type="hidden" id="songId">
+        <div class="form-row">
+          <div class="form-group">
+            <label>歌曲名称 <span style="color: var(--error-color);">*</span></label>
+            <input type="text" id="songName" required placeholder="请输入歌曲名称">
+          </div>
+          <div class="form-group">
+            <label>歌手 <span style="color: var(--error-color);">*</span></label>
+            <input type="text" id="songSinger" required placeholder="请输入歌手名">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>分类</label>
+          <select id="songCategory">
+            <option value="">请选择分类</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>播放链接</label>
+            <input type="text" id="songUrl" placeholder="歌曲播放地址">
+          </div>
+          <div class="form-group">
+            <label>封面链接</label>
+            <input type="text" id="songCover" placeholder="歌曲封面地址">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>歌词</label>
+          <textarea id="songLyrics" rows="4" placeholder="请输入歌词（可选）"></textarea>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="songsPage.closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="songsPage.saveSong()">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="importModal" style="display: none;">
+  <div class="modal-content" style="max-width: 600px;">
+    <div class="modal-header">
+      <h3 class="modal-title">批量导入歌曲</h3>
+      <span class="modal-close" onclick="songsPage.closeImportModal()">&times;</span>
+    </div>
+    <div class="modal-body">
+      <div id="importStep1">
+        <div class="import-tips">
+          <p><strong>导入说明：</strong></p>
+          <ul>
+            <li>支持 Excel (.xlsx, .xls)、CSV、JSON 格式文件</li>
+            <li>Excel/CSV 需包含列：歌曲名称、歌手</li>
+            <li>可选列：分类、播放链接、封面链接、歌词</li>
+          </ul>
+        </div>
+        <div class="file-upload-area" id="importDropZone">
+          <div style="font-size: 48px; margin-bottom: 12px; opacity: 0.5;">📁</div>
+          <p>点击或拖拽文件到此处上传</p>
+          <p style="font-size: 12px; color: var(--text-color-disabled); margin-top: 8px;">支持 .xlsx, .xls, .csv, .json 格式</p>
+          <input type="file" id="importFile" accept=".xlsx,.xls,.csv,.json" style="display: none;" onchange="songsPage.handleFileSelect(this)">
+        </div>
+        <div id="importPreview" style="margin-top: 16px;"></div>
+        <div style="margin-top: 12px;">
+          <a href="javascript:void(0)" onclick="songsPage.downloadTemplate()" style="color: var(--primary-color); font-size: 14px;">下载导入模板</a>
+        </div>
+      </div>
+      
+      <div id="importStep2" style="display: none;">
+        <div class="import-progress-container">
+          <div class="progress-header">
+            <span class="progress-title">正在导入...</span>
+            <span class="progress-percent" id="importProgressPercent">0%</span>
+          </div>
+          <div class="progress-bar-wrapper">
+            <div class="progress-bar" id="importProgressBar" style="width: 0%"></div>
+          </div>
+          <div class="progress-detail">
+            <span>已处理: <strong id="importProcessed">0</strong> / <strong id="importTotal">0</strong></span>
+            <span>成功: <strong id="importCurrentSuccess">0</strong></span>
+            <span>失败: <strong id="importCurrentFailed">0</strong></span>
+          </div>
+        </div>
+      </div>
+      
+      <div id="importStep3" style="display: none;">
+        <div class="import-result">
+          <div class="result-icon" id="resultIcon">✅</div>
+          <div class="result-text" id="resultText">导入完成</div>
+          <div class="result-stats">
+            <div class="stat-item success">
+              <span class="stat-label">成功导入</span>
+              <span class="stat-value" id="importSuccess">0</span>
+            </div>
+            <div class="stat-item error">
+              <span class="stat-label">失败</span>
+              <span class="stat-value" id="importFailed">0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="importCancelBtn" onclick="songsPage.closeImportModal()">取消</button>
+      <button class="btn btn-primary" id="importBtn" onclick="songsPage.doImport()" disabled>开始导入</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.song-table {
+  width: 100%;
+}
+
+.song-table th {
+  background: #fafafa;
+  font-weight: 600;
+  color: var(--text-color-secondary);
+  font-size: 13px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-color-split);
+}
+
+.song-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-color-split);
+  vertical-align: middle;
+}
+
+.song-table tr:hover {
+  background: var(--bg-color-component-hover);
+}
+
+.song-info-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.song-cover {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  background: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: #999;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.song-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.song-name-cell {
+  font-weight: 500;
+  color: var(--text-color);
+  margin-bottom: 2px;
+}
+
+.song-singer-cell {
+  font-size: 12px;
+  color: var(--text-color-secondary);
+}
+
+.action-btns {
+  display: flex;
+  gap: 6px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 24px;
+  color: var(--text-color-secondary);
+}
+
+.empty-state .icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 60px 24px;
+  color: var(--text-color-secondary);
+}
+
+.loading-state .loading-spinner {
+  margin: 0 auto 16px;
+}
+
+@media (max-width: 768px) {
+  .song-table {
+    display: block;
+  }
+  
+  .song-table thead {
+    display: none;
+  }
+  
+  .song-table tbody {
+    display: block;
+  }
+  
+  .song-table tr {
+    display: block;
+    padding: 16px;
+    border-bottom: 1px solid var(--border-color-split);
+  }
+  
+  .song-table td {
+    display: block;
+    padding: 8px 0;
+    border: none;
+  }
+  
+  .song-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--text-color-secondary);
+    margin-right: 8px;
+  }
+}
+
+.import-progress-container {
+  padding: 24px;
+  text-align: center;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.progress-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.progress-percent {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.progress-bar-wrapper {
+  width: 100%;
+  height: 12px;
+  background: var(--bg-color-component);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary-color), var(--primary-color-hover));
+  border-radius: 6px;
+  transition: width 0.3s ease;
+}
+
+.progress-detail {
+  display: flex;
+  justify-content: space-around;
+  gap: 16px;
+  font-size: 14px;
+  color: var(--text-color-secondary);
+}
+
+.progress-detail strong {
+  color: var(--text-color);
+  margin: 0 4px;
+}
+
+.import-result {
+  text-align: center;
+  padding: 24px;
+}
+
+.result-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.result-text {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text-color);
+  margin-bottom: 24px;
+}
+
+.result-stats {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  margin-bottom: 24px;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-label {
+  display: block;
+  font-size: 14px;
+  color: var(--text-color-secondary);
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.stat-item.success .stat-value {
+  color: var(--success-color);
+}
+
+.stat-item.error .stat-value {
+  color: var(--error-color);
+}
+
+.batch-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--primary-color-bg);
+  border-radius: 8px;
+  margin-left: auto;
+}
+
+.batch-actions .selected-count {
+  font-size: 14px;
+  color: var(--text-color-secondary);
+}
+
+.batch-actions .selected-count strong {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.selected-row {
+  background: var(--primary-color-bg) !important;
+}
+
+.song-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+</style>
+
+<script>
+(function() {
+  let currentPage = 1;
+  let pageSize = 10;
+  let categories = [];
+  let importData = [];
+  let selectedSongs = new Set();
+  
+  window.songsPage = {
+    init: async function() {
+      await this.loadCategories();
+      this.loadData();
+      this.bindEvents();
+    },
+    
+    loadCategories: async function() {
+      try {
+        const res = await api.category.getList();
+        if (res.code === 0 && res.data) {
+          categories = res.data;
+          this.renderCategoryOptions();
+        }
+      } catch (error) {
+        console.error('加载分类失败:', error);
+      }
+    },
+    
+    renderCategoryOptions: function() {
+      const filterSelect = document.getElementById('categoryFilter');
+      const formSelect = document.getElementById('songCategory');
+      
+      const options = categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+      
+      if (filterSelect) {
+        filterSelect.innerHTML = '<option value="">全部分类</option>' + options;
+      }
+      if (formSelect) {
+        formSelect.innerHTML = '<option value="">请选择分类</option>' + options;
+      }
+    },
+    
+    bindEvents: function() {
+      const dropZone = document.getElementById('importDropZone');
+      const fileInput = document.getElementById('importFile');
+      
+      if (!dropZone || !fileInput) return;
+      
+      dropZone.addEventListener('click', () => fileInput.click());
+      
+      dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+      });
+      
+      dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('dragover');
+      });
+      
+      dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        const file = e.dataTransfer.files[0];
+        if (file) this.processFile(file);
+      });
+    },
+    
+    loadData: async function() {
+      const keyword = document.getElementById('searchInput').value.trim();
+      const categoryId = document.getElementById('categoryFilter').value;
+      const status = document.getElementById('statusFilter').value;
+      const container = document.getElementById('songList');
+      
+      container.innerHTML = `
+        <div class="loading-state">
+          <div class="loading-spinner"></div>
+          <p>加载中...</p>
+        </div>
+      `;
+      
+      try {
+        const res = await api.song.getList({
+          page: currentPage,
+          pageSize,
+          keyword,
+          categoryId: categoryId || undefined,
+          status: status !== '' ? parseInt(status) : undefined
+        });
+        
+        this.renderList(res);
+      } catch (error) {
+        console.error('加载列表失败:', error);
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="icon">⚠️</div>
+            <p>加载失败，请重试</p>
+          </div>
+        `;
+      }
+    },
+    
+    renderList: function(res) {
+      const container = document.getElementById('songList');
+      
+      if (res.code !== 0 || !res.data || !res.data.list || res.data.list.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="icon">🎵</div>
+            <p>暂无歌曲数据</p>
+          </div>
+        `;
+        return;
+      }
+      
+      let html = '<table class="song-table"><thead><tr>';
+      html += '<th style="width: 40px;"><input type="checkbox" id="selectAll" onchange="songsPage.toggleSelectAll(this)"></th>';
+      html += '<th>歌曲信息</th>';
+      html += '<th>分类</th>';
+      html += '<th>播放量</th>';
+      html += '<th>状态</th>';
+      html += '<th>操作</th>';
+      html += '</tr></thead><tbody>';
+      
+      res.data.list.forEach(item => {
+        const statusClass = item.status === 1 ? 'status-approved' : 'status-muted';
+        const statusText = item.status === 1 ? '已上架' : '已下架';
+        const categoryName = this.getCategoryName(item.category_id);
+        const isSelected = selectedSongs.has(item.id);
+        
+        html += `
+          <tr class="${isSelected ? 'selected-row' : ''}">
+            <td><input type="checkbox" class="song-checkbox" data-id="${item.id}" ${isSelected ? 'checked' : ''} onchange="songsPage.toggleSelect(${item.id}, this)"></td>
+            <td data-label="歌曲信息">
+              <div class="song-info-cell">
+                <div class="song-cover">
+                  ${item.cover_url ? `<img src="${item.cover_url}" onerror="this.style.display='none';this.parentElement.innerHTML='🎵'">` : '🎵'}
+                </div>
+                <div>
+                  <div class="song-name-cell">${item.name || '-'}</div>
+                  <div class="song-singer-cell">${item.singer || '未知歌手'}</div>
+                </div>
+              </div>
+            </td>
+            <td data-label="分类">${categoryName}</td>
+            <td data-label="播放量">${item.play_count || 0}</td>
+            <td data-label="状态">
+              <span class="status-tag ${statusClass}">${statusText}</span>
+            </td>
+            <td data-label="操作">
+              <div class="action-btns">
+                <button class="btn btn-sm btn-secondary" onclick="songsPage.editSong(${item.id})">编辑</button>
+                <button class="btn btn-sm ${item.status === 1 ? 'btn-warning' : 'btn-success'}" onclick="songsPage.toggleStatus(${item.id}, ${item.status})">
+                  ${item.status === 1 ? '下架' : '上架'}
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="songsPage.deleteSong(${item.id})">删除</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+      
+      html += '</tbody></table>';
+      
+      if (res.data.total > pageSize) {
+        html += this.renderPagination(res.data.total);
+      }
+      
+      container.innerHTML = html;
+      this.updateBatchActions();
+    },
+    
+    renderPagination: function(total) {
+      const totalPages = Math.ceil(total / pageSize);
+      
+      let html = '<div class="pagination" style="padding: 16px 24px; border-top: 1px solid var(--border-color-split);">';
+      html += `<span style="color: var(--text-color-secondary); margin-right: 12px; font-size: 13px;">共 ${total} 条</span>`;
+      html += `<button ${currentPage === 1 ? 'disabled' : ''} onclick="songsPage.goToPage(${currentPage - 1})">上一页</button>`;
+      
+      for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+          html += `<button class="${i === currentPage ? 'active' : ''}" onclick="songsPage.goToPage(${i})">${i}</button>`;
+        }
+      }
+      
+      html += `<button ${currentPage === totalPages ? 'disabled' : ''} onclick="songsPage.goToPage(${currentPage + 1})">下一页</button>`;
+      html += '</div>';
+      
+      return html;
+    },
+    
+    goToPage: function(page) {
+      currentPage = page;
+      this.loadData();
+    },
+    
+    getCategoryName: function(categoryId) {
+      const category = categories.find(c => c.id === categoryId);
+      return category ? category.name : '-';
+    },
+    
+    showAddModal: function() {
+      document.getElementById('songModalTitle').textContent = '添加歌曲';
+      document.getElementById('songForm').reset();
+      document.getElementById('songId').value = '';
+      document.getElementById('songModal').style.display = 'flex';
+    },
+    
+    editSong: async function(id) {
+      try {
+        const res = await api.song.getDetail(id);
+        if (res.code === 0 && res.data) {
+          document.getElementById('songModalTitle').textContent = '编辑歌曲';
+          document.getElementById('songId').value = id;
+          document.getElementById('songName').value = res.data.name || '';
+          document.getElementById('songSinger').value = res.data.singer || '';
+          document.getElementById('songCategory').value = res.data.category_id || '';
+          document.getElementById('songUrl').value = res.data.url || '';
+          document.getElementById('songCover').value = res.data.cover_url || '';
+          document.getElementById('songLyrics').value = res.data.lyrics || '';
+          document.getElementById('songModal').style.display = 'flex';
+        }
+      } catch (error) {
+        api.showError('获取歌曲信息失败');
+      }
+    },
+    
+    closeModal: function() {
+      document.getElementById('songModal').style.display = 'none';
+    },
+    
+    saveSong: async function() {
+      const id = document.getElementById('songId').value;
+      const data = {
+        name: document.getElementById('songName').value.trim(),
+        singer: document.getElementById('songSinger').value.trim(),
+        category_id: document.getElementById('songCategory').value || null,
+        url: document.getElementById('songUrl').value.trim(),
+        cover_url: document.getElementById('songCover').value.trim(),
+        lyrics: document.getElementById('songLyrics').value.trim()
+      };
+      
+      if (!data.name || !data.singer) {
+        api.showError('请填写歌曲名称和歌手');
+        return;
+      }
+      
+      try {
+        let res;
+        if (id) {
+          res = await api.song.update(id, data);
+        } else {
+          res = await api.song.add(data);
+        }
+        
+        if (res.code === 0) {
+          api.showSuccess(id ? '修改成功' : '添加成功');
+          this.closeModal();
+          this.loadData();
+        } else {
+          api.showError(res.msg || '操作失败');
+        }
+      } catch (error) {
+        api.showError('操作失败');
+      }
+    },
+    
+    toggleStatus: async function(id, currentStatus) {
+      const newStatus = currentStatus === 1 ? 0 : 1;
+      const action = newStatus === 1 ? '上架' : '下架';
+      
+      if (!await app.confirm(`确定要${action}这首歌曲吗？`)) return;
+      
+      try {
+        const res = await api.song.update(id, { status: newStatus });
+        if (res.code === 0) {
+          api.showSuccess(`${action}成功`);
+          this.loadData();
+        }
+      } catch (error) {
+        api.showError(`${action}失败`);
+      }
+    },
+    
+    deleteSong: async function(id) {
+      if (!await app.confirm('确定要删除这首歌曲吗？此操作不可恢复。')) return;
+      
+      try {
+        const res = await api.song.delete(id);
+        if (res.code === 0) {
+          api.showSuccess('删除成功');
+          this.loadData();
+        }
+      } catch (error) {
+        api.showError('删除失败');
+      }
+    },
+    
+    toggleSelectAll: function(checkbox) {
+      const checkboxes = document.querySelectorAll('.song-checkbox');
+      checkboxes.forEach(cb => {
+        const id = parseInt(cb.dataset.id);
+        if (checkbox.checked) {
+          selectedSongs.add(id);
+          cb.checked = true;
+        } else {
+          selectedSongs.delete(id);
+          cb.checked = false;
+        }
+      });
+      this.updateBatchActions();
+    },
+    
+    toggleSelect: function(id, checkbox) {
+      if (checkbox.checked) {
+        selectedSongs.add(id);
+      } else {
+        selectedSongs.delete(id);
+      }
+      this.updateBatchActions();
+    },
+    
+    updateBatchActions: function() {
+      const batchActions = document.getElementById('batchActions');
+      const selectedCount = document.getElementById('selectedCount');
+      const selectAllCheckbox = document.getElementById('selectAll');
+      
+      if (selectedSongs.size > 0) {
+        batchActions.style.display = 'flex';
+        selectedCount.textContent = selectedSongs.size;
+      } else {
+        batchActions.style.display = 'none';
+      }
+      
+      const checkboxes = document.querySelectorAll('.song-checkbox');
+      if (selectAllCheckbox && checkboxes.length > 0) {
+        selectAllCheckbox.checked = selectedSongs.size === checkboxes.length;
+      }
+    },
+    
+    clearSelection: function() {
+      selectedSongs.clear();
+      this.loadData();
+    },
+    
+    batchOnline: async function() {
+      if (selectedSongs.size === 0) {
+        api.showError('请选择要上架的歌曲');
+        return;
+      }
+      
+      if (!await app.confirm(`确定要上架选中的 ${selectedSongs.size} 首歌曲吗？`)) return;
+      
+      try {
+        const res = await api.song.batchStatus(Array.from(selectedSongs), 1);
+        if (res.code === 0) {
+          api.showSuccess(`成功上架 ${selectedSongs.size} 首歌曲`);
+          selectedSongs.clear();
+          this.loadData();
+        }
+      } catch (error) {
+        api.showError('批量上架失败');
+      }
+    },
+    
+    batchOffline: async function() {
+      if (selectedSongs.size === 0) {
+        api.showError('请选择要下架的歌曲');
+        return;
+      }
+      
+      if (!await app.confirm(`确定要下架选中的 ${selectedSongs.size} 首歌曲吗？`)) return;
+      
+      try {
+        const res = await api.song.batchStatus(Array.from(selectedSongs), 0);
+        if (res.code === 0) {
+          api.showSuccess(`成功下架 ${selectedSongs.size} 首歌曲`);
+          selectedSongs.clear();
+          this.loadData();
+        }
+      } catch (error) {
+        api.showError('批量下架失败');
+      }
+    },
+    
+    batchDelete: async function() {
+      if (selectedSongs.size === 0) {
+        api.showError('请选择要删除的歌曲');
+        return;
+      }
+      
+      if (!await app.confirm(`确定要删除选中的 ${selectedSongs.size} 首歌曲吗？此操作不可恢复。`)) return;
+      
+      try {
+        const res = await api.song.batchDelete(Array.from(selectedSongs));
+        if (res.code === 0) {
+          api.showSuccess(`成功删除 ${selectedSongs.size} 首歌曲`);
+          selectedSongs.clear();
+          this.loadData();
+        }
+      } catch (error) {
+        api.showError('批量删除失败');
+      }
+    },
+    
+    exportSongs: async function() {
+      try {
+        const keyword = document.getElementById('searchInput').value.trim();
+        const categoryId = document.getElementById('categoryFilter').value;
+        const status = document.getElementById('statusFilter').value;
+        
+        const res = await api.song.exportSongs({
+          keyword: keyword || undefined,
+          categoryId: categoryId || undefined,
+          status: status !== '' ? status : undefined
+        });
+        
+        if (res.code === 0 && res.data) {
+          const dataStr = JSON.stringify(res.data, null, 2);
+          const blob = new Blob([dataStr], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `歌曲数据_${new Date().toISOString().split('T')[0]}.json`;
+          a.click();
+          URL.revokeObjectURL(url);
+          api.showSuccess('导出成功');
+        }
+      } catch (error) {
+        api.showError('导出失败');
+      }
+    },
+    
+    resetFilters: function() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('categoryFilter').value = '';
+      document.getElementById('statusFilter').value = '';
+      currentPage = 1;
+      this.loadData();
+    },
+    
+    showImportModal: function() {
+      importData = [];
+      document.getElementById('importPreview').innerHTML = '';
+      document.getElementById('importBtn').disabled = true;
+      document.getElementById('importFile').value = '';
+      document.getElementById('importStep1').style.display = 'block';
+      document.getElementById('importStep2').style.display = 'none';
+      document.getElementById('importStep3').style.display = 'none';
+      document.getElementById('importModal').style.display = 'flex';
+    },
+    
+    handleFileSelect: function(input) {
+      const file = input.files[0];
+      if (file) this.processFile(file);
+    },
+    
+    processFile: function(file) {
+      const fileName = file.name.toLowerCase();
+      const isExcel = fileName.endsWith('.xlsx') || fileName.endsWith('.xls');
+      const isCSV = fileName.endsWith('.csv');
+      const isJSON = fileName.endsWith('.json');
+      
+      if (!isExcel && !isCSV && !isJSON) {
+        api.showError('请上传 Excel (.xlsx, .xls)、CSV 或 JSON 格式文件');
+        return;
+      }
+      
+      const reader = new FileReader();
+      
+      reader.onload = (e) => {
+        try {
+          if (isJSON) {
+            importData = JSON.parse(e.target.result);
+            if (!Array.isArray(importData)) {
+              api.showError('JSON 文件格式错误，应为数组格式');
+              return;
+            }
+          } else if (isExcel || isCSV) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            const rawData = XLSX.utils.sheet_to_json(firstSheet);
+            
+            importData = rawData.map(row => ({
+              name: row['歌曲名称'] || row['name'] || row['Name'] || '',
+              singer: row['歌手'] || row['singer'] || row['Singer'] || '',
+              category: row['分类'] || row['category'] || row['Category'] || '',
+              url: row['播放链接'] || row['url'] || row['URL'] || '',
+              cover_url: row['封面链接'] || row['cover_url'] || row['CoverUrl'] || '',
+              lyrics: row['歌词'] || row['lyrics'] || row['Lyrics'] || ''
+            }));
+          }
+          
+          this.showImportPreview();
+        } catch (error) {
+          console.error('文件解析失败:', error);
+          api.showError('文件解析失败，请检查文件格式');
+        }
+      };
+      
+      if (isJSON) {
+        reader.readAsText(file);
+      } else {
+        reader.readAsArrayBuffer(file);
+      }
+    },
+    
+    downloadTemplate: function() {
+      const template = [
+        { '歌曲名称': '起风了', '歌手': '买辣椒也用券', '分类': '流行', '播放链接': '', '封面链接': '', '歌词': '' },
+        { '歌曲名称': '晴天', '歌手': '周杰伦', '分类': '流行', '播放链接': '', '封面链接': '', '歌词': '' }
+      ];
+      
+      const ws = XLSX.utils.json_to_sheet(template);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, '歌曲导入模板');
+      XLSX.writeFile(wb, '歌曲导入模板.xlsx');
+    },
+    
+    showImportPreview: function() {
+      const preview = document.getElementById('importPreview');
+      const validCount = importData.filter(item => item.name && item.singer).length;
+      const invalidCount = importData.length - validCount;
+      
+      let html = `
+        <div style="padding: 12px; background: var(--success-color-bg); border-radius: 8px; border: 1px solid var(--success-color-border); margin-bottom: 12px;">
+          <p style="color: var(--success-color); font-weight: 500;">
+            ✓ 解析成功，共 ${importData.length} 条数据，有效数据 ${validCount} 条
+            ${invalidCount > 0 ? `<span style="color: var(--error-color);">，无效 ${invalidCount} 条</span>` : ''}
+          </p>
+        </div>
+      `;
+      
+      if (importData.length > 0) {
+        html += `
+          <div style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px;">
+            <table style="width: 100%; font-size: 12px; border-collapse: collapse;">
+              <thead>
+                <tr style="background: var(--bg-color-component);">
+                  <th style="padding: 8px; text-align: left; border-bottom: 1px solid var(--border-color);">歌曲名称</th>
+                  <th style="padding: 8px; text-align: left; border-bottom: 1px solid var(--border-color);">歌手</th>
+                  <th style="padding: 8px; text-align: left; border-bottom: 1px solid var(--border-color);">分类</th>
+                  <th style="padding: 8px; text-align: left; border-bottom: 1px solid var(--border-color);">状态</th>
+                </tr>
+              </thead>
+              <tbody>
+        `;
+        
+        importData.slice(0, 10).forEach(item => {
+          const isValid = item.name && item.singer;
+          html += `
+            <tr style="${!isValid ? 'background: var(--error-color-bg);' : ''}">
+              <td style="padding: 8px; border-bottom: 1px solid var(--border-color-split);">${item.name || '-'}</td>
+              <td style="padding: 8px; border-bottom: 1px solid var(--border-color-split);">${item.singer || '-'}</td>
+              <td style="padding: 8px; border-bottom: 1px solid var(--border-color-split);">${item.category || '-'}</td>
+              <td style="padding: 8px; border-bottom: 1px solid var(--border-color-split);">${isValid ? '✅ 有效' : '❌ 缺少必填项'}</td>
+            </tr>
+          `;
+        });
+        
+        if (importData.length > 10) {
+          html += `<tr><td colspan="4" style="padding: 8px; text-align: center; color: var(--text-color-secondary);">... 还有 ${importData.length - 10} 条数据</td></tr>`;
+        }
+        
+        html += '</tbody></table></div>';
+      }
+      
+      preview.innerHTML = html;
+      document.getElementById('importBtn').disabled = validCount === 0;
+    },
+    
+    doImport: async function() {
+      const btn = document.getElementById('importBtn');
+      const cancelBtn = document.getElementById('importCancelBtn');
+      btn.disabled = true;
+      cancelBtn.disabled = true;
+      
+      document.getElementById('importStep1').style.display = 'none';
+      document.getElementById('importStep2').style.display = 'block';
+      
+      const validData = importData.filter(item => item.name && item.singer);
+      const total = validData.length;
+      
+      document.getElementById('importTotal').textContent = total;
+      
+      let successCount = 0;
+      let failCount = 0;
+      let processed = 0;
+      
+      for (const item of validData) {
+        try {
+          let categoryId = null;
+          if (item.category) {
+            const category = categories.find(c => c.name === item.category);
+            if (category) categoryId = category.id;
+          }
+          
+          const res = await api.song.add({
+            name: item.name,
+            singer: item.singer,
+            url: item.url || '',
+            cover_url: item.cover_url || '',
+            category_id: categoryId,
+            lyrics: item.lyrics || ''
+          });
+          
+          if (res.code === 0) {
+            successCount++;
+          } else {
+            failCount++;
+          }
+        } catch (error) {
+          failCount++;
+        }
+        
+        processed++;
+        const percent = Math.round((processed / total) * 100);
+        
+        document.getElementById('importProcessed').textContent = processed;
+        document.getElementById('importCurrentSuccess').textContent = successCount;
+        document.getElementById('importCurrentFailed').textContent = failCount;
+        document.getElementById('importProgressPercent').textContent = percent + '%';
+        document.getElementById('importProgressBar').style.width = percent + '%';
+      }
+      
+      document.getElementById('importStep2').style.display = 'none';
+      document.getElementById('importStep3').style.display = 'block';
+      
+      document.getElementById('importSuccess').textContent = successCount;
+      document.getElementById('importFailed').textContent = failCount;
+      
+      btn.textContent = '完成';
+      btn.disabled = false;
+      btn.onclick = () => {
+        this.closeImportModal();
+        this.loadData();
+      };
+      cancelBtn.textContent = '关闭';
+      cancelBtn.disabled = false;
+    },
+    
+    closeImportModal: function() {
+      document.getElementById('importModal').style.display = 'none';
+      document.getElementById('importStep1').style.display = 'block';
+      document.getElementById('importStep2').style.display = 'none';
+      document.getElementById('importStep3').style.display = 'none';
+      
+      const btn = document.getElementById('importBtn');
+      btn.textContent = '开始导入';
+      btn.disabled = true;
+      btn.onclick = () => this.doImport();
+      
+      const cancelBtn = document.getElementById('importCancelBtn');
+      cancelBtn.textContent = '取消';
+      cancelBtn.disabled = false;
+      cancelBtn.onclick = () => this.closeImportModal();
+      
+      importData = [];
+    },
+    
+    formatTime: function(dateStr) {
+      if (!dateStr) return '-';
+      const d = new Date(dateStr);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const hour = String(d.getHours()).padStart(2, '0');
+      const minute = String(d.getMinutes()).padStart(2, '0');
+      return `${year}-${month}-${day} ${hour}:${minute}`;
+    }
+  };
+  
+  window.initSongsPage = function() {
+    songsPage.init();
+  };
+  
+  window.initSongsPage();
+})();
+</script>
